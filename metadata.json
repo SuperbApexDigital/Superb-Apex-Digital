@@ -1,0 +1,6 @@
+{
+  "name": "Superb Apex Digital",
+  "description": "Premier digital creative and community services agency specializing in Discord, Twitch, YouTube, social media, and creator branding.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
