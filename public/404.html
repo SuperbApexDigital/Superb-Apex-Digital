@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Redirecting – Superb Apex Digital</title>
+    <script>
+      // Single Page Application redirect script for GitHub Pages
+      // Converts direct path requests into hash routes so the SPA handles them without 404 errors.
+      (function() {
+        var path = window.location.pathname;
+        var repoName = 'superb-apex-digital';
+        
+        // Remove repo prefix if present
+        var repoRegex = new RegExp('^/' + repoName + '/?');
+        var cleanPath = path.replace(repoRegex, '');
+        
+        // Construct target route
+        var query = window.location.search;
+        var hash = window.location.hash;
+        
+        var target = '/' + repoName + '/#/' + cleanPath + query + hash;
+        window.location.replace(target);
+      })();
+    </script>
+  </head>
+  <body style="font-family: sans-serif; text-align: center; padding: 40px; background: #0B0F14; color: #F5F7FA;">
+    <p>Navigating to Superb Apex Digital...</p>
+    <noscript>
+      <p>Please click <a href="./#/" style="color: #6C8CFF;">here</a> to continue to the homepage.</p>
+    </noscript>
+  </body>
+</html>

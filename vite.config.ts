@@ -1,11 +1,22 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
-import {defineConfig} from 'vite';
+import { fileURLToPath } from 'url';
+import { defineConfig } from 'vite';
 
-export default defineConfig(() => {
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+export default defineConfig(({ command }) => {
+  // During local development or preview server, use root '/' for immediate availability.
+  // For production build, default to the GitHub Pages repository path '/superb-apex-digital/'.
+  // Supports runtime override via VITE_BASE_PATH environment variable (e.g. for custom root domains).
+  const basePath =
+    process.env.VITE_BASE_PATH ??
+    (command === 'serve' ? '/' : '/superb-apex-digital/');
+
   return {
-    base: process.env.VITE_BASE_PATH || './',
+    base: basePath,
     plugins: [react(), tailwindcss()],
     resolve: {
       alias: {
