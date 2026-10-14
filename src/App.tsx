@@ -97,12 +97,73 @@ const MainContent: React.FC = () => {
   );
 };
 
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error: Error | null;
+}
+
+class AppErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  ErrorBoundaryState
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error('Superb Apex Digital runtime error:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen flex items-center justify-center p-6 bg-[#0B0F14] text-[#F5F7FA] font-body text-center">
+          <div className="max-w-md w-full p-8 rounded-2xl bg-[#121923] border border-[#283343] shadow-xl space-y-6">
+            <div className="w-12 h-12 rounded-xl bg-[#365DE8]/20 text-[#6C8CFF] flex items-center justify-center mx-auto text-xl font-bold font-mono">
+              Λ
+            </div>
+            <div className="space-y-2">
+              <h2 className="text-xl font-bold tracking-tight text-[#F5F7FA]">
+                Superb Apex Digital
+              </h2>
+              <p className="text-xs text-[#B2BDCB] leading-relaxed">
+                A temporary display issue occurred while initializing the view.
+              </p>
+            </div>
+            <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  this.setState({ hasError: false, error: null });
+                  window.location.hash = '#/';
+                  window.location.reload();
+                }}
+                className="w-full sm:w-auto px-5 py-2.5 text-xs font-semibold rounded-xl bg-[#365DE8] hover:bg-[#2e50cb] text-white transition-colors"
+              >
+                Reload Homepage
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 export default function App() {
   return (
-    <ThemeProvider>
-      <RouterProvider>
-        <MainContent />
-      </RouterProvider>
-    </ThemeProvider>
+    <AppErrorBoundary>
+      <ThemeProvider>
+        <RouterProvider>
+          <MainContent />
+        </RouterProvider>
+      </ThemeProvider>
+    </AppErrorBoundary>
   );
 }

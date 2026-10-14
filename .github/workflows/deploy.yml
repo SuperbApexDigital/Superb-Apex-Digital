@@ -35,14 +35,15 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Setup Pages configuration
+        id: pages
+        uses: actions/configure-pages@v5
+
       - name: Build production site
         run: npm run build
         env:
-          # Base path configured for https://<username>.github.io/superb-apex-digital/
-          VITE_BASE_PATH: '/superb-apex-digital/'
-
-      - name: Setup Pages configuration
-        uses: actions/configure-pages@v5
+          # Automatically uses GitHub Pages base path, falling back to '/superb-apex-digital/'
+          VITE_BASE_PATH: ${{ steps.pages.outputs.base_path || '/superb-apex-digital' }}/
 
       - name: Upload GitHub Pages artifact
         uses: actions/upload-pages-artifact@v3

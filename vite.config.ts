@@ -11,9 +11,13 @@ export default defineConfig(({ command }) => {
   // During local development or preview server, use root '/' for immediate availability.
   // For production build, default to the GitHub Pages repository path '/superb-apex-digital/'.
   // Supports runtime override via VITE_BASE_PATH environment variable (e.g. for custom root domains).
-  const basePath =
-    process.env.VITE_BASE_PATH ??
-    (command === 'serve' ? '/' : '/superb-apex-digital/');
+  let rawBase = process.env.VITE_BASE_PATH?.trim();
+  if (rawBase) {
+    if (!rawBase.endsWith('/')) rawBase = `${rawBase}/`;
+    if (!rawBase.startsWith('/') && !rawBase.startsWith('.')) rawBase = `/${rawBase}`;
+    rawBase = rawBase.replace(/\/{2,}/g, '/');
+  }
+  const basePath = rawBase || (command === 'serve' ? '/' : '/superb-apex-digital/');
 
   return {
     base: basePath,

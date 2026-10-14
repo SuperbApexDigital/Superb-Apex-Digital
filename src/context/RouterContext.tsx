@@ -37,53 +37,99 @@ const VALID_ROUTES: RoutePath[] = [
   'not-found',
 ];
 
-function parseHash(hash: string): { route: RoutePath; params: QueryParams } {
-  const clean = hash.replace(/^#\/?/, '').trim();
-  if (!clean) {
+function parseCurrentLocation(): { route: RoutePath; params: QueryParams } {
+  if (typeof window === 'undefined') {
     return { route: 'home', params: {} };
   }
 
-  const [pathPart, queryPart] = clean.split('?');
-  const params: QueryParams = {};
+  // 1. Process hash route if present
+  const rawHash = window.location.hash || '';
+  if (rawHash && rawHash !== '#' && rawHash !== '#/') {
+    let clean = rawHash.replace(/^#\/?/, '').trim();
+    if (clean === 'index.html' || clean.startsWith('index.html?')) {
+      clean = clean.replace(/^index\.html\/?/, '');
+    }
 
-  if (queryPart) {
-    const searchParams = new URLSearchParams(queryPart);
-    searchParams.forEach((val, key) => {
-      params[key] = val;
-    });
+    if (!clean) {
+      return { route: 'home', params: {} };
+    }
+
+    const [pathPart, queryPart] = clean.split('?');
+    const params: QueryParams = {};
+
+    if (queryPart) {
+      try {
+        const searchParams = new URLSearchParams(queryPart);
+        searchParams.forEach((val, key) => {
+          params[key] = val;
+        });
+      } catch {
+        // Query param parsing fallback
+      }
+    }
+
+    const cleanPath = (pathPart || 'home').replace(/\/+$/, '').trim();
+    const normalizedRoute = (cleanPath || 'home') as RoutePath;
+    if (VALID_ROUTES.includes(normalizedRoute)) {
+      return { route: normalizedRoute, params };
+    }
+
+    return { route: 'not-found', params };
   }
 
-  const normalizedRoute = (pathPart || 'home') as RoutePath;
-  if (VALID_ROUTES.includes(normalizedRoute)) {
-    return { route: normalizedRoute, params };
+  // 2. Fallback: Parse path directly if accessed without hash
+  const pathname = window.location.pathname || '/';
+  const segments = pathname.split('/').filter(Boolean);
+
+  // If first segment is repository name, remove it
+  if (segments.length > 0 && segments[0].toLowerCase() === 'superb-apex-digital') {
+    segments.shift();
   }
 
-  return { route: 'not-found', params };
+  const remainingPath = segments.join('/').replace(/\/+$/, '');
+  if (!remainingPath || remainingPath.toLowerCase() === 'index.html') {
+    return { route: 'home', params: {} };
+  }
+
+  const candidateRoute = remainingPath as RoutePath;
+  if (VALID_ROUTES.includes(candidateRoute)) {
+    return { route: candidateRoute, params: {} };
+  }
+
+  return { route: 'home', params: {} };
 }
 
 export const RouterProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [currentRoute, setCurrentRoute] = useState<RoutePath>('home');
-  const [currentParams, setCurrentParams] = useState<QueryParams>({});
+  const [currentRoute, setCurrentRoute] = useState<RoutePath>(() => {
+    return parseCurrentLocation().route;
+  });
+  const [currentParams, setCurrentParams] = useState<QueryParams>(() => {
+    return parseCurrentLocation().params;
+  });
 
-  // Sync state from current URL hash
-  const syncFromHash = useCallback(() => {
+  // Sync state from current URL
+  const syncLocation = useCallback(() => {
     if (typeof window === 'undefined') return;
-    const parsed = parseHash(window.location.hash);
+    const parsed = parseCurrentLocation();
     setCurrentRoute(parsed.route);
     setCurrentParams(parsed.params);
   }, []);
 
   useEffect(() => {
-    syncFromHash();
+    syncLocation();
 
-    const handleHashChange = () => {
-      syncFromHash();
+    const handleLocationChange = () => {
+      syncLocation();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
-    window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
-  }, [syncFromHash]);
+    window.addEventListener('hashchange', handleLocationChange);
+    window.addEventListener('popstate', handleLocationChange);
+    return () => {
+      window.removeEventListener('hashchange', handleLocationChange);
+      window.removeEventListener('popstate', handleLocationChange);
+    };
+  }, [syncLocation]);
 
   const navigate = useCallback((to: RoutePath, queryParams?: QueryParams) => {
     let target = `#/${to === 'home' ? '' : to}`;

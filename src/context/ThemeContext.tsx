@@ -12,9 +12,13 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [theme, setThemeState] = useState<ThemeMode>(() => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('sad_theme') as ThemeMode | null;
-      if (saved && (saved === 'dark' || saved === 'light' || saved === 'system')) {
-        return saved;
+      try {
+        const saved = window.localStorage?.getItem('sad_theme') as ThemeMode | null;
+        if (saved && (saved === 'dark' || saved === 'light' || saved === 'system')) {
+          return saved;
+        }
+      } catch {
+        // Storage access might be restricted by privacy settings or sandboxed iframe
       }
     }
     return 'dark'; // Default agency theme is dark as defined in brand tokens
@@ -22,7 +26,11 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const [systemTheme, setSystemTheme] = useState<'dark' | 'light'>(() => {
     if (typeof window !== 'undefined' && window.matchMedia) {
-      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      try {
+        return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      } catch {
+        return 'dark';
+      }
     }
     return 'dark';
   });
@@ -30,13 +38,22 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   useEffect(() => {
     if (typeof window === 'undefined' || !window.matchMedia) return;
 
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const handleChange = (e: MediaQueryListEvent) => {
-      setSystemTheme(e.matches ? 'dark' : 'light');
-    };
+    try {
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      const handleChange = (e: MediaQueryListEvent | MediaQueryList) => {
+        setSystemTheme(e.matches ? 'dark' : 'light');
+      };
 
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
+      if (mediaQuery.addEventListener) {
+        mediaQuery.addEventListener('change', handleChange);
+        return () => mediaQuery.removeEventListener('change', handleChange);
+      } else if (mediaQuery.addListener) {
+        mediaQuery.addListener(handleChange);
+        return () => mediaQuery.removeListener(handleChange);
+      }
+    } catch {
+      // Safely ignore mediaQuery listener failures
+    }
   }, []);
 
   const resolvedTheme = theme === 'system' ? systemTheme : theme;

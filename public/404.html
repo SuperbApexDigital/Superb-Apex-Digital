@@ -9,17 +9,24 @@
       // Converts direct path requests into hash routes so the SPA handles them without 404 errors.
       (function() {
         var path = window.location.pathname;
+        var hostname = window.location.hostname;
+        var isGitHubPages = hostname.endsWith('github.io');
+        
+        // Extract repo name if on github.io (<username>.github.io/<repo>)
+        var segments = path.split('/').filter(Boolean);
         var repoName = 'superb-apex-digital';
+        if (isGitHubPages && segments.length > 0) {
+          repoName = segments[0];
+        }
+
+        var basePrefix = isGitHubPages ? ('/' + repoName) : '';
+        var repoRegex = new RegExp('^' + (basePrefix ? (basePrefix + '/?') : '/?'));
+        var cleanPath = path.replace(repoRegex, '').replace(/^index\.html\/?/i, '');
         
-        // Remove repo prefix if present
-        var repoRegex = new RegExp('^/' + repoName + '/?');
-        var cleanPath = path.replace(repoRegex, '');
+        var query = window.location.search || '';
+        var hash = window.location.hash || '';
         
-        // Construct target route
-        var query = window.location.search;
-        var hash = window.location.hash;
-        
-        var target = '/' + repoName + '/#/' + cleanPath + query + hash;
+        var target = (basePrefix ? (basePrefix + '/') : '/') + '#/' + cleanPath + query + hash;
         window.location.replace(target);
       })();
     </script>
