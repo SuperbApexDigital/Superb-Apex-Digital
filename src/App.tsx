@@ -18,6 +18,8 @@ import { AboutPage } from './pages/AboutPage';
 import { ProcessPage } from './pages/ProcessPage';
 import { PortfolioPage } from './pages/PortfolioPage';
 import { PricingPage } from './pages/PricingPage';
+import { ReviewsPage } from './pages/ReviewsPage';
+import { AdminPage } from './pages/AdminPage';
 import { TrustPage } from './pages/TrustPage';
 import { FaqPage } from './pages/FaqPage';
 import { ContactPage } from './pages/ContactPage';
@@ -71,6 +73,10 @@ const MainContent: React.FC = () => {
         return <PortfolioPage />;
       case 'pricing':
         return <PricingPage />;
+      case 'reviews':
+        return <ReviewsPage />;
+      case 'admin':
+        return <AdminPage />;
       case 'trust':
         return <TrustPage />;
       case 'faq':

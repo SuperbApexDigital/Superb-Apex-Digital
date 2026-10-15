@@ -15,6 +15,7 @@ export const Navbar: React.FC = () => {
     { path: 'process', label: 'Process' },
     { path: 'portfolio', label: 'Portfolio' },
     { path: 'pricing', label: 'Pricing' },
+    { path: 'reviews', label: 'Reviews' },
     { path: 'about', label: 'About' },
   ];
 

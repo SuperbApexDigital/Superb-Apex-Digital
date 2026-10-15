@@ -23,6 +23,7 @@ export const Footer: React.FC = () => {
     { path: 'process', label: 'Our 5-Stage Process' },
     { path: 'portfolio', label: 'Concept Showcase' },
     { path: 'pricing', label: 'Pricing & Scope Model' },
+    { path: 'reviews', label: 'Client Ratings & Reviews' },
     { path: 'trust', label: 'Trust & Responsible Access' },
     { path: 'faq', label: 'Frequently Asked Questions' },
     { path: 'contact', label: 'Contact Our Team' },

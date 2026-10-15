@@ -12,6 +12,8 @@ export type RoutePath =
   | 'process'
   | 'portfolio'
   | 'pricing'
+  | 'reviews'
+  | 'admin'
   | 'trust'
   | 'faq'
   | 'contact'
@@ -21,6 +23,50 @@ export type RoutePath =
   | 'not-found';
 
 export type ThemeMode = 'dark' | 'light' | 'system';
+
+export type ReviewServiceCategory =
+  | 'Discord Services'
+  | 'Twitch Services'
+  | 'YouTube Services'
+  | 'Social Media Services'
+  | 'Community Management'
+  | 'Creator Branding'
+  | 'Custom Project';
+
+export type ReviewStatus = 'pending' | 'approved' | 'rejected';
+
+export interface AdminReply {
+  message: string;
+  repliedAt: string;
+  author: string;
+}
+
+export interface Review {
+  id: string;
+  clientName: string;
+  clientRole: string;
+  clientAvatar?: string;
+  avatarBgColor?: string;
+  serviceCategory: ReviewServiceCategory;
+  rating: number; // 1 to 5
+  title: string;
+  comment: string;
+  createdAt: string; // ISO string
+  status: ReviewStatus;
+  featured?: boolean;
+  verifiedClient?: boolean;
+  adminReply?: AdminReply;
+}
+
+export interface ReviewFormData {
+  clientName: string;
+  clientRole: string;
+  serviceCategory: ReviewServiceCategory;
+  rating: number;
+  title: string;
+  comment: string;
+  verifiedClient: boolean;
+}
 
 export interface ServiceDetail {
   id: string;

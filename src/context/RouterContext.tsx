@@ -28,6 +28,8 @@ const VALID_ROUTES: RoutePath[] = [
   'process',
   'portfolio',
   'pricing',
+  'reviews',
+  'admin',
   'trust',
   'faq',
   'contact',
@@ -69,31 +71,53 @@ function parseCurrentLocation(): { route: RoutePath; params: QueryParams } {
     }
 
     const cleanPath = (pathPart || 'home').replace(/\/+$/, '').trim();
-    const normalizedRoute = (cleanPath || 'home') as RoutePath;
-    if (VALID_ROUTES.includes(normalizedRoute)) {
-      return { route: normalizedRoute, params };
+    // Case-insensitive match against VALID_ROUTES (e.g. /Admin, #/Admin, /admin)
+    const matchedHashRoute = VALID_ROUTES.find(
+      (r) => r.toLowerCase() === cleanPath.toLowerCase()
+    );
+    if (matchedHashRoute) {
+      return { route: matchedHashRoute, params };
     }
 
     return { route: 'not-found', params };
   }
 
-  // 2. Fallback: Parse path directly if accessed without hash
+  // 2. Fallback: Parse path directly if accessed without hash (e.g. myWebsite/Admin)
   const pathname = window.location.pathname || '/';
   const segments = pathname.split('/').filter(Boolean);
 
-  // If first segment is repository name, remove it
+  // If first segment is repository name (GitHub Pages), remove it
   if (segments.length > 0 && segments[0].toLowerCase() === 'superb-apex-digital') {
     segments.shift();
   }
 
-  const remainingPath = segments.join('/').replace(/\/+$/, '');
+  const remainingPath = segments.join('/').replace(/\/+$/, '').trim();
   if (!remainingPath || remainingPath.toLowerCase() === 'index.html') {
+    // Check if query param specifies admin or page (e.g. ?admin or ?Admin)
+    if (typeof window !== 'undefined' && window.location.search) {
+      try {
+        const searchParams = new URLSearchParams(window.location.search);
+        const page = searchParams.get('page') || searchParams.get('p');
+        if (page) {
+          const match = VALID_ROUTES.find((r) => r.toLowerCase() === page.toLowerCase());
+          if (match) return { route: match, params: {} };
+        }
+        if (searchParams.has('admin') || searchParams.has('Admin')) {
+          return { route: 'admin', params: {} };
+        }
+      } catch {
+        // Fallback
+      }
+    }
     return { route: 'home', params: {} };
   }
 
-  const candidateRoute = remainingPath as RoutePath;
-  if (VALID_ROUTES.includes(candidateRoute)) {
-    return { route: candidateRoute, params: {} };
+  // Case-insensitive matching for direct paths like /Admin
+  const matchedPathRoute = VALID_ROUTES.find(
+    (r) => r.toLowerCase() === remainingPath.toLowerCase()
+  );
+  if (matchedPathRoute) {
+    return { route: matchedPathRoute, params: {} };
   }
 
   return { route: 'home', params: {} };

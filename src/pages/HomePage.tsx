@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from '../context/RouterContext';
 import { ImageWithFallback } from '../components/common/ImageWithFallback';
 import { ServiceIconBadge, ServiceIconType } from '../components/common/ServiceIconBadge';
@@ -15,11 +15,30 @@ import {
   Layers,
   ArrowUpRight,
   Check,
+  Star,
+  MessageSquareQuote,
 } from 'lucide-react';
 import { PORTFOLIO_ITEMS } from '../data/agencyData';
+import { reviewService } from '../services/reviewService';
+import { ReviewCard } from '../components/reviews/ReviewCard';
+import { ReviewSubmissionModal } from '../components/reviews/ReviewSubmissionModal';
+import { Review } from '../types';
 
 export const HomePage: React.FC = () => {
   const { navigate } = useRouter();
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [stats, setStats] = useState(reviewService.getStats());
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+
+  useEffect(() => {
+    const loadReviews = () => {
+      setReviews(reviewService.getApprovedReviews().slice(0, 3));
+      setStats(reviewService.getStats());
+    };
+    loadReviews();
+    window.addEventListener('sad_reviews_updated', loadReviews);
+    return () => window.removeEventListener('sad_reviews_updated', loadReviews);
+  }, []);
 
   const servicesPreview = [
     {
@@ -448,7 +467,51 @@ export const HomePage: React.FC = () => {
         </div>
       </section>
 
-      {/* 6. TRUST & RESPONSIBLE ACCESS CALLOUT */}
+      {/* 6. VERIFIED CLIENT REVIEWS & RATINGS */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
+          <div className="space-y-2">
+            <div className="inline-flex items-center gap-2 text-xs font-semibold text-[#365DE8] dark:text-[#6C8CFF]">
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Verified Client Feedback</span>
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#172033] dark:text-[#F5F7FA]">
+              Rated {stats.averageRating} / 5.0 by Creators & Communities
+            </h2>
+            <p className="text-xs sm:text-sm text-[#526078] dark:text-[#B2BDCB] max-w-xl">
+              Authentic reviews from verified clients across Discord architecture, stream overhauls, video pipelines, and creator branding.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3 shrink-0">
+            <button
+              type="button"
+              onClick={() => setIsReviewModalOpen(true)}
+              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-xl text-white bg-[#365DE8] hover:bg-[#2e50cb] dark:bg-[#6C8CFF] dark:text-[#0B0F14] transition-all shadow-xs"
+            >
+              <Star className="w-3.5 h-3.5 fill-current" />
+              <span>Leave a Review</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => navigate('reviews')}
+              className="inline-flex items-center gap-1 text-xs font-semibold text-[#365DE8] dark:text-[#6C8CFF] hover:underline"
+            >
+              <span>View all reviews</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {reviews.map((rev) => (
+            <ReviewCard key={rev.id} review={rev} />
+          ))}
+        </div>
+      </section>
+
+      {/* 7. TRUST & RESPONSIBLE ACCESS CALLOUT */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="rounded-2xl bg-gradient-to-r from-[#121923] to-[#192331] text-[#F5F7FA] p-8 lg:p-12 border border-[#283343] relative overflow-hidden">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
@@ -533,6 +596,16 @@ export const HomePage: React.FC = () => {
           </div>
         </div>
       </section>
+
+      {/* Review Submission Modal */}
+      <ReviewSubmissionModal
+        isOpen={isReviewModalOpen}
+        onClose={() => setIsReviewModalOpen(false)}
+        onSubmitted={() => {
+          setReviews(reviewService.getApprovedReviews().slice(0, 3));
+          setStats(reviewService.getStats());
+        }}
+      />
     </div>
   );
 };
