@@ -1,6 +1,7 @@
 import React from 'react';
 import { useRouter } from '../../context/RouterContext';
 import { ApexLogo } from '../common/ApexLogo';
+import { ThemeToggle } from '../common/ThemeToggle';
 import { Shield, GitBranch, ArrowUpRight } from 'lucide-react';
 import { RoutePath } from '../../types';
 
@@ -122,10 +123,15 @@ export const Footer: React.FC = () => {
           </div>
         </div>
 
-        {/* Bottom hairline bar with copyright and legal policies */}
-        <div className="mt-12 pt-6 border-t border-[#DCE3EE] dark:border-[#283343] flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#526078] dark:text-[#B2BDCB]">
-          <div className="flex items-center gap-2">
+        {/* Bottom hairline bar with copyright, theme selector, and legal policies */}
+        <div className="mt-12 pt-6 border-t border-[#DCE3EE] dark:border-[#283343] flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-[#526078] dark:text-[#B2BDCB]">
+          <div className="flex items-center gap-3">
             <span>© {new Date().getFullYear()} Superb Apex Digital. All rights reserved.</span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] font-medium text-[#526078] dark:text-[#B2BDCB]">Theme:</span>
+            <ThemeToggle />
           </div>
 
           <div className="flex items-center gap-5">

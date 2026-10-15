@@ -137,7 +137,13 @@ export const Navbar: React.FC = () => {
               </button>
             </div>
 
-            <div className="pt-4">
+            {/* Theme switcher for mobile menu */}
+            <div className="pt-3 pb-1 border-t border-[#DCE3EE] dark:border-[#283343] mt-2 flex items-center justify-between px-3">
+              <span className="text-xs font-semibold text-[#526078] dark:text-[#B2BDCB]">Appearance</span>
+              <ThemeToggle />
+            </div>
+
+            <div className="pt-3">
               <button
                 type="button"
                 onClick={() => handleNavClick('quote')}

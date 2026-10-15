@@ -46,6 +46,25 @@
       ]
     }
     </script>
+    <script>
+      (function() {
+        try {
+          var saved = localStorage.getItem('sad_theme');
+          var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+          var isDark = saved === 'dark' || (!saved) || (saved === 'system' && prefersDark);
+          if (saved === 'light') isDark = false;
+          if (isDark) {
+            document.documentElement.classList.add('dark');
+            document.documentElement.setAttribute('data-theme', 'dark');
+            document.documentElement.style.colorScheme = 'dark';
+          } else {
+            document.documentElement.classList.remove('dark');
+            document.documentElement.setAttribute('data-theme', 'light');
+            document.documentElement.style.colorScheme = 'light';
+          }
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body class="antialiased selection:bg-[#365DE8]/20 dark:selection:bg-[#6C8CFF]/20 selection:text-[#365DE8] dark:selection:text-[#6C8CFF]">
     <div id="root"></div>
