@@ -1,8 +1,8 @@
 import { Review, ReviewFormData, ReviewStatus } from '../types';
+import { computeAdminHash, DEFAULT_ADMIN_HASH } from '../utils/crypto';
 
 const REVIEWS_STORAGE_KEY = 'sad_client_reviews_v1';
-const ADMIN_PASSWORD_KEY = 'sad_admin_password_v1';
-const DEFAULT_ADMIN_PASSWORD = 'ApexAdmin2025';
+const ADMIN_HASH_STORAGE_KEY = 'sad_admin_pwd_hash_v2';
 
 const AVATAR_BG_COLORS = [
   '#365DE8', // Apex Blue
@@ -315,16 +315,26 @@ class ReviewService {
     window.dispatchEvent(new CustomEvent('sad_reviews_updated', { detail: { reviews: INITIAL_SEEDED_REVIEWS } }));
   }
 
-  // Admin Password Security
-  public getStoredAdminPassword(): string {
-    if (typeof window === 'undefined') return DEFAULT_ADMIN_PASSWORD;
-    const stored = localStorage.getItem(ADMIN_PASSWORD_KEY);
-    return stored || DEFAULT_ADMIN_PASSWORD;
+  // Admin Password Security via Salted Cryptographic Hash
+  public getStoredAdminHash(): string {
+    if (typeof window === 'undefined') return DEFAULT_ADMIN_HASH;
+    // Clear legacy plaintext storage if any existed
+    try {
+      if (localStorage.getItem('sad_admin_password_v1')) {
+        localStorage.removeItem('sad_admin_password_v1');
+      }
+    } catch {
+      // ignore
+    }
+    const stored = localStorage.getItem(ADMIN_HASH_STORAGE_KEY);
+    return stored || DEFAULT_ADMIN_HASH;
   }
 
   public verifyAdminPassword(password: string): boolean {
-    const expected = this.getStoredAdminPassword();
-    return password.trim() === expected;
+    if (!password) return false;
+    const computed = computeAdminHash(password);
+    const expected = this.getStoredAdminHash();
+    return computed === expected;
   }
 
   public changeAdminPassword(oldPassword: string, newPassword: string): { success: boolean; error?: string } {
@@ -335,13 +345,10 @@ class ReviewService {
       return { success: false, error: 'New password must be at least 6 characters long.' };
     }
     if (typeof window !== 'undefined') {
-      localStorage.setItem(ADMIN_PASSWORD_KEY, newPassword.trim());
+      const newHash = computeAdminHash(newPassword);
+      localStorage.setItem(ADMIN_HASH_STORAGE_KEY, newHash);
     }
     return { success: true };
-  }
-
-  public getDefaultPasswordHint(): string {
-    return DEFAULT_ADMIN_PASSWORD;
   }
 }
 

@@ -442,18 +442,12 @@ export const AdminPage: React.FC = () => {
             </button>
           </form>
 
-          {/* Password Helper Card */}
-          <div className="p-4 rounded-xl bg-[#F7F8FC] dark:bg-[#182230] border border-[#DCE3EE] dark:border-[#283343] text-xs space-y-2 text-[#526078] dark:text-[#B2BDCB]">
-            <div className="flex items-center gap-2 text-[#365DE8] dark:text-[#6C8CFF] font-semibold">
-              <ShieldCheck className="w-4 h-4 shrink-0" />
-              <span>Personal Admin Access Credentials</span>
-            </div>
-            <p className="text-[11px] leading-relaxed">
-              Default master password: <code className="px-1.5 py-0.5 rounded bg-white dark:bg-[#121923] border border-[#DCE3EE] dark:border-[#283343] font-mono font-bold text-[#172033] dark:text-[#F5F7FA]">ApexAdmin2025</code>
-            </p>
-            <p className="text-[11px] leading-relaxed">
-              You can personalize or change this password at any time inside the <strong>Settings</strong> tab once logged in.
-            </p>
+          {/* Confidential Admin Protection Notice */}
+          <div className="p-3.5 rounded-xl bg-[#F7F8FC] dark:bg-[#182230] border border-[#DCE3EE] dark:border-[#283343] text-xs flex items-center gap-2.5 text-[#526078] dark:text-[#B2BDCB]">
+            <Lock className="w-4 h-4 shrink-0 text-[#365DE8] dark:text-[#6C8CFF]" />
+            <span className="text-[11px] leading-relaxed">
+              Protected administrative area. Cryptographically verified master key required.
+            </span>
           </div>
 
           <div className="text-center pt-2">
