@@ -29,13 +29,21 @@ export const TeamPage: React.FC = () => {
   const [lightboxMember, setLightboxMember] = useState<TeamMember | null>(null);
 
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>(() => teamService.getTeamMembers());
+  const [lightboxImgError, setLightboxImgError] = useState(false);
 
   useEffect(() => {
+    // Actively pull the latest profile photos from the server on mobile mount
+    teamService.syncWithServer();
     const unsubscribe = teamService.subscribe(() => {
       setTeamMembers(teamService.getTeamMembers());
     });
     return unsubscribe;
   }, []);
+
+  // Reset lightbox image error whenever active lightbox member changes
+  useEffect(() => {
+    setLightboxImgError(false);
+  }, [lightboxMember?.id, lightboxMember?.avatarUrl]);
 
   const filteredMembers =
     selectedDept === 'All'
@@ -671,11 +679,14 @@ export const TeamPage: React.FC = () => {
 
               {/* Main Profile Image Display */}
               <div className="max-w-[85vw] sm:max-w-md w-full aspect-square max-h-[48vh] sm:max-h-[55vh] rounded-2xl sm:rounded-3xl overflow-hidden border-2 border-white/20 shadow-2xl relative bg-[#121923] flex items-center justify-center group select-none">
-                {lightboxMember.avatarUrl ? (
+                {lightboxMember.avatarUrl && !lightboxImgError ? (
                   <img
                     src={lightboxMember.avatarUrl}
                     alt={`${lightboxMember.name} profile image`}
+                    loading="eager"
+                    decoding="async"
                     referrerPolicy="no-referrer"
+                    onError={() => setLightboxImgError(true)}
                     className="w-full h-full object-cover"
                   />
                 ) : (

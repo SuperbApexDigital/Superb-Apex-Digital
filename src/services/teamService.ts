@@ -17,9 +17,23 @@ function computeInitials(name: string): string {
 
 export class TeamService {
   private members: TeamMember[] = [];
+  private isServerSyncing = false;
 
   constructor() {
     this.loadFromStorage();
+    this.syncWithServer();
+
+    // On mobile devices, automatically refresh roster when returning to the tab or app
+    if (typeof window !== 'undefined') {
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+          this.syncWithServer();
+        }
+      });
+      window.addEventListener('focus', () => {
+        this.syncWithServer();
+      });
+    }
   }
 
   private loadFromStorage(): void {
@@ -60,18 +74,90 @@ export class TeamService {
         return { ...m };
       });
 
-      this.saveToStorage();
+      this.saveToStorage(false);
     } catch (e) {
       console.warn('Failed to load team roster from localStorage', e);
       this.members = [...TEAM_MEMBERS];
     }
   }
 
-  private saveToStorage(): void {
+  /**
+   * Syncs roster with the server so all devices (mobile phones, tablets, PCs)
+   * immediately see the exact same uploaded profile images and member details.
+   */
+  public async syncWithServer(): Promise<boolean> {
+    if (typeof window === 'undefined') return false;
+    try {
+      this.isServerSyncing = true;
+      const res = await fetch('/api/team', {
+        headers: { 'Cache-Control': 'no-cache' },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data && Array.isArray(data.members) && data.members.length > 0) {
+          // If server data differs from our current state, update and notify
+          const currentJson = JSON.stringify(this.members);
+          const serverJson = JSON.stringify(data.members);
+          if (currentJson !== serverJson) {
+            this.members = data.members;
+            localStorage.setItem(STORAGE_KEY_ROSTER, serverJson);
+            window.dispatchEvent(new Event(STORAGE_EVENT_NAME));
+          }
+          return true;
+        }
+      }
+
+      // If server does not have custom roster yet, push our current members to server
+      if (this.members.length > 0) {
+        await this.pushToServer();
+        return true;
+      }
+      return false;
+    } catch (err) {
+      // Offline fallback: rely on localStorage
+      console.warn('Server sync unavailable, using local cache:', err);
+      return false;
+    } finally {
+      this.isServerSyncing = false;
+    }
+  }
+
+  /**
+   * Push current roster (including all newly uploaded photos) to server so mobile devices receive them
+   */
+  public async pushToServer(): Promise<boolean> {
+    if (typeof window === 'undefined') return false;
+    try {
+      const res = await fetch('/api/team/sync', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ members: this.members }),
+      });
+      return res.ok;
+    } catch (err) {
+      console.warn('Failed to push team roster to server', err);
+      return false;
+    }
+  }
+
+  /**
+   * Force push current roster to cloud to make sure mobile devices immediately receive all photos
+   */
+  public async forcePushToCloud(): Promise<boolean> {
+    this.saveToStorage(false);
+    return await this.pushToServer();
+  }
+
+  private saveToStorage(push = true): void {
     if (typeof window === 'undefined') return;
     try {
       localStorage.setItem(STORAGE_KEY_ROSTER, JSON.stringify(this.members));
       window.dispatchEvent(new Event(STORAGE_EVENT_NAME));
+      if (push) {
+        this.pushToServer().catch(() => {});
+      }
     } catch (e) {
       console.error('Failed to save team roster to localStorage', e);
     }
@@ -213,6 +299,9 @@ export class TeamService {
   public resetAllToDefault(): void {
     this.members = TEAM_MEMBERS.map((m) => ({ ...m }));
     this.saveToStorage();
+    if (typeof window !== 'undefined') {
+      fetch('/api/team/reset', { method: 'POST' }).catch(() => {});
+    }
   }
 
   /**
@@ -235,9 +324,9 @@ export class TeamService {
 
   /**
    * Helper utility to compress an image file client-side using Canvas
-   * Max dimension 500x500 to keep localStorage fast, lightweight, and high-fidelity
+   * Max dimension 420x420 to keep fast, lightweight, and crystal-clear on mobile & retina screens.
    */
-  public static async compressImageFile(file: File, maxDim = 500, quality = 0.88): Promise<string> {
+  public static async compressImageFile(file: File, maxDim = 420, quality = 0.85): Promise<string> {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = (e) => {

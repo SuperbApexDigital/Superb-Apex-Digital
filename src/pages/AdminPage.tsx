@@ -36,6 +36,7 @@ import {
   Plus,
   X,
   ChevronDown,
+  Smartphone,
 } from 'lucide-react';
 import { ApexLogo } from '../components/common/ApexLogo';
 
@@ -87,6 +88,8 @@ export const AdminPage: React.FC = () => {
   const [editBio, setEditBio] = useState('');
   const [editFocusAreas, setEditFocusAreas] = useState('');
   const [editStatus, setEditStatus] = useState<'Active Lead' | 'Online Specialist' | 'Profile Configurable'>('Active Lead');
+  const [editAvatarUrl, setEditAvatarUrl] = useState<string>('');
+  const [isPushingToCloud, setIsPushingToCloud] = useState(false);
 
   const openEditModal = (member: TeamMember) => {
     setEditingMember(member);
@@ -97,9 +100,10 @@ export const AdminPage: React.FC = () => {
     setEditBio(member.bio);
     setEditFocusAreas(member.focusAreas.join(', '));
     setEditStatus(member.status);
+    setEditAvatarUrl(member.avatarUrl || '');
   };
 
-  const handleSaveMemberEdit = (e: React.FormEvent) => {
+  const handleSaveMemberEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingMember || !editName.trim()) return;
 
@@ -117,11 +121,29 @@ export const AdminPage: React.FC = () => {
         ? editFocusAreas.split(',').map((s) => s.trim()).filter(Boolean)
         : editingMember.focusAreas,
       status: editStatus,
+      avatarUrl: editAvatarUrl || editingMember.avatarUrl,
     });
 
+    await teamService.pushToServer();
     setTeamMembers(teamService.getTeamMembers());
     setEditingMember(null);
-    showNotice(`Updated ${editName.trim()}'s profile and name!`);
+    showNotice(`Updated ${editName.trim()}'s profile and name! Synced across all mobile devices.`);
+  };
+
+  const handleManualPushToMobile = async () => {
+    setIsPushingToCloud(true);
+    try {
+      const ok = await teamService.forcePushToCloud();
+      if (ok) {
+        showNotice('All team profile photos & changes are now synced live to all mobile devices!');
+      } else {
+        showNotice('Saved locally. Auto-sync will retry connecting to the cloud.');
+      }
+    } catch {
+      showNotice('Sync attempt finished.');
+    } finally {
+      setIsPushingToCloud(false);
+    }
   };
 
   const handleAddMember = async (e: React.FormEvent) => {
@@ -207,9 +229,10 @@ export const AdminPage: React.FC = () => {
       setUploadingMemberId(memberId);
       const compressedDataUrl = await TeamService.compressImageFile(file, 500, 0.9);
       teamService.updateMemberAvatar(memberId, compressedDataUrl);
+      await teamService.pushToServer();
       setTeamMembers(teamService.getTeamMembers());
       const m = teamMembers.find((item) => item.id === memberId);
-      showNotice(`Custom profile photo uploaded for ${m?.name || 'specialist'}! Live across the site.`);
+      showNotice(`Custom profile photo uploaded for ${m?.name || 'specialist'}! Live across mobile & web.`);
     } catch (err) {
       console.error('Error uploading photo:', err);
       showNotice('Failed to process image file. Please use a PNG, JPG, or WebP image.');
@@ -218,18 +241,20 @@ export const AdminPage: React.FC = () => {
     }
   };
 
-  const handleRevertPhoto = (memberId: string) => {
+  const handleRevertPhoto = async (memberId: string) => {
     const m = teamMembers.find((item) => item.id === memberId);
     teamService.removeMemberAvatar(memberId);
+    await teamService.pushToServer();
     setTeamMembers(teamService.getTeamMembers());
     showNotice(`Reverted ${m?.name || 'specialist'} photo to default asset.`);
   };
 
-  const handleResetAllTeamPhotos = () => {
+  const handleResetAllTeamPhotos = async () => {
     if (window.confirm('Are you sure you want to revert all team photos and rosters back to their original default state?')) {
       teamService.resetAllToDefault();
+      await teamService.pushToServer();
       setTeamMembers(teamService.getTeamMembers());
-      showNotice('All team members and avatars have been reset to default.');
+      showNotice('All team members and avatars have been reset to default on all devices.');
     }
   };
 

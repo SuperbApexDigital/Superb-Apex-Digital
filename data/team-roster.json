@@ -1,0 +1,242 @@
+[
+  {
+    "id": "nrt-captaindav",
+    "name": "CaptainDav",
+    "discordTag": "@captaindav",
+    "department": "Networking Relations Team",
+    "role": "Principal Director of Networking & Strategic Creator Relations",
+    "initials": "CD",
+    "avatarUrl": "/src/assets/images/avatar_captaindav_1792256928070.jpg",
+    "avatarTheme": "cyan",
+    "bannerGradient": "from-sky-700 via-blue-900 to-slate-950",
+    "discordRoles": [
+      "Networking Relations Lead",
+      "Creator Advocate",
+      "Discord Architect"
+    ],
+    "bio": "Serves as our frontline ambassador and top client advocate. Proactively reaches out to creators and esports organizations to understand their operational hurdles, diagnosing friction on the spot and rightfully connecting partners with tailor-fit agency solutions while delivering unwavering personal support.",
+    "focusAreas": [
+      "Proactive Outreach",
+      "Bottleneck Diagnosis",
+      "Strategic Matchmaking",
+      "Creator Advocacy"
+    ],
+    "status": "Active Lead"
+  },
+  {
+    "id": "nrt-kryonace",
+    "name": "KryonAce",
+    "discordTag": "@kryonace",
+    "department": "Networking Relations Team",
+    "role": "Senior Client Solutions & Proactive Outreach Specialist",
+    "initials": "KA",
+    "avatarUrl": "/src/assets/images/avatar_kryonace_1792256928677.jpg",
+    "avatarTheme": "purple",
+    "bannerGradient": "from-purple-800 via-violet-950 to-slate-950",
+    "discordRoles": [
+      "Client Solutions",
+      "Outreach Specialist",
+      "Growth Strategist"
+    ],
+    "bio": "Dedicated problem solver committed to hands-on client assistance. Directly reaches out to rising talents and brand teams to uncover production pain points, architecting immediate practical remedies and ensuring each client receives attentive, dedicated guidance through every phase.",
+    "focusAreas": [
+      "Proactive Outreach",
+      "Friction Diagnosis",
+      "Actionable Remedies",
+      "Dedicated Support"
+    ],
+    "status": "Active Lead"
+  },
+  {
+    "id": "nrt-kryonpyper",
+    "name": "KryonPyper",
+    "discordTag": "@kryonpyper",
+    "department": "Networking Relations Team",
+    "role": "Guild & Community Relations Lead",
+    "initials": "KP",
+    "avatarUrl": "/src/assets/images/avatar_kryonpyper_1792256929209.jpg",
+    "avatarTheme": "emerald",
+    "bannerGradient": "from-emerald-700 via-teal-950 to-slate-950",
+    "discordRoles": [
+      "Community Relations",
+      "Discord Systems",
+      "Guild Strategist"
+    ],
+    "bio": "Connects directly with gaming guilds, Web3 hubs, and server founders. Quickly identifies community bottlenecks, permission vulnerabilities, and engagement lulls, rightfully connecting owners with high-impact systems while standing by them as a steadfast ally.",
+    "focusAreas": [
+      "Community Outreach",
+      "Server Bottlenecks",
+      "Rightful Matchmaking",
+      "Guild Guidance"
+    ],
+    "status": "Active Lead"
+  },
+  {
+    "id": "nrt-daveee",
+    "name": "daveee",
+    "discordTag": "@daveee",
+    "department": "Networking Relations Team",
+    "role": "Partner Engagement & Technical Solutions Specialist",
+    "initials": "DV",
+    "avatarUrl": "/src/assets/images/avatar_daveee_1792256929008.jpg",
+    "avatarTheme": "amber",
+    "bannerGradient": "from-amber-600 via-orange-950 to-slate-950",
+    "discordRoles": [
+      "Technical Solutions",
+      "Creator Liaison",
+      "Problem Solver"
+    ],
+    "bio": "Reaches out to content creators, stream broadcasters, and video teams to diagnose technical roadblocks. Operates as an essential problem solver, rightfully aligning client vision with precision design and streaming assets while offering reliable, responsive care.",
+    "focusAreas": [
+      "Creator Engagement",
+      "Workflow Diagnosis",
+      "Pipeline Matchmaking",
+      "Responsive Care"
+    ],
+    "status": "Active Lead"
+  },
+  {
+    "id": "nrt-jamiu",
+    "name": "jamiu",
+    "discordTag": "@jamiu",
+    "department": "Networking Relations Team",
+    "role": "Client Onboarding & Diagnostic Relations Specialist",
+    "initials": "JM",
+    "avatarUrl": "/src/assets/images/avatar_jamiu_1792256942532.jpg",
+    "avatarTheme": "blue",
+    "bannerGradient": "from-blue-700 via-indigo-950 to-slate-950",
+    "discordRoles": [
+      "Onboarding Lead",
+      "Diagnostic Specialist",
+      "Client Champion"
+    ],
+    "bio": "Attentive first-touch diagnostic specialist who ensures incoming partners are heard and prioritized. Carefully unpacks project goals, eliminates confusion, rightfully connects clients with specialized production squads, and provides end-to-end advocacy throughout execution.",
+    "focusAreas": [
+      "First-Touch Discovery",
+      "Needs Diagnosis",
+      "Resource Allocation",
+      "Dedicated Advocacy"
+    ],
+    "status": "Active Lead"
+  },
+  {
+    "id": "nrt-temple",
+    "name": "temple",
+    "discordTag": "@temple",
+    "department": "Networking Relations Team",
+    "role": "Solutions Ambassador & Operations Advocate",
+    "initials": "TP",
+    "avatarUrl": "/src/assets/images/avatar_temple_1792256944248.jpg",
+    "avatarTheme": "rose",
+    "bannerGradient": "from-rose-700 via-pink-950 to-slate-950",
+    "discordRoles": [
+      "Solutions Ambassador",
+      "Client Advocate",
+      "Strategic Liaison"
+    ],
+    "bio": "Proactively fosters long-term relationships through continuous outreach and empathetic consultation. Diagnoses cross-platform friction before it affects delivery, rightfully connects leaders with technical experts, and champions client success as a core priority.",
+    "focusAreas": [
+      "Strategic Outreach",
+      "Crisis Prevention",
+      "Enduring Support",
+      "Resource Alignment"
+    ],
+    "status": "Active Lead"
+  },
+  {
+    "id": "pse-1",
+    "name": "Alex Vance",
+    "discordTag": "@avance_sla",
+    "department": "Partner Success & Escalations",
+    "role": "Head of Partner Success & Priority Escalations",
+    "initials": "AV",
+    "avatarUrl": "/src/assets/images/avatar_alex_vance_1792256944532.jpg",
+    "avatarTheme": "indigo",
+    "bannerGradient": "from-indigo-800 via-purple-950 to-slate-950",
+    "discordRoles": [
+      "Partner Success Head",
+      "Crisis Commander",
+      "SLA Enforcer"
+    ],
+    "bio": "Oversees tier-1 operational continuity, client retainer health, and urgent escalation protocols. Directs fast-action response teams to protect partner workflows and resolve high-stakes technical blockers.",
+    "focusAreas": [
+      "Priority Escalations",
+      "SLA Governance",
+      "Account Health & Retention",
+      "Crisis Command"
+    ],
+    "status": "Active Lead"
+  },
+  {
+    "id": "pse-2",
+    "name": "Marcus Chen",
+    "discordTag": "@mchen_sec",
+    "department": "Partner Success & Escalations",
+    "role": "Lead Infrastructure & Security Escalations Engineer",
+    "initials": "MC",
+    "avatarUrl": "/src/assets/images/avatar_marcus_chen_1792256945125.jpg",
+    "avatarTheme": "slate",
+    "bannerGradient": "from-slate-700 via-zinc-900 to-black",
+    "discordRoles": [
+      "Infrastructure Lead",
+      "Security Specialist",
+      "Anti-Raid Engineer"
+    ],
+    "bio": "Specializes in high-pressure Discord server security, bot outage triages, permission exploits, and anti-raid mitigations. Ensures zero compromise across mission-critical community architectures.",
+    "focusAreas": [
+      "Security Incident Triage",
+      "Bot Architecture Recovery",
+      "Role-Matrix Hardening",
+      "Anti-Raid Defense"
+    ],
+    "status": "Active Lead"
+  },
+  {
+    "id": "pse-3",
+    "name": "Derrick Thorne",
+    "discordTag": "@dthorne_stream",
+    "department": "Partner Success & Escalations",
+    "role": "Broadcast Systems & Live Stream Escalations Specialist",
+    "initials": "DT",
+    "avatarUrl": "/src/assets/images/avatar_derrick_thorne_1792256958106.jpg",
+    "avatarTheme": "cyan",
+    "bannerGradient": "from-teal-800 via-cyan-950 to-slate-950",
+    "discordRoles": [
+      "Broadcast Engineer",
+      "OBS Specialist",
+      "Live Event Lead"
+    ],
+    "bio": "Provides immediate technical intervention for live broadcast stream drops, OBS scene glitches, audio routing errors, and low-latency widget failures during high-stakes streaming events.",
+    "focusAreas": [
+      "Live Stream Debugging",
+      "OBS Pipeline Recovery",
+      "Encoder Optimization",
+      "Emergency Asset Hotfixes"
+    ],
+    "status": "Active Lead"
+  },
+  {
+    "id": "pse-4",
+    "name": "Elena Rostova",
+    "discordTag": "@erostova_qa",
+    "department": "Partner Success & Escalations",
+    "role": "Partner QA & Delivery Governance Specialist",
+    "initials": "ER",
+    "avatarUrl": "/src/assets/images/avatar_elena_rostova_1792256958247.jpg",
+    "avatarTheme": "amber",
+    "bannerGradient": "from-amber-700 via-stone-900 to-black",
+    "discordRoles": [
+      "QA Lead",
+      "Governance Auditor",
+      "Milestone Reviewer"
+    ],
+    "bio": "Enforces rigorous quality standards across all final deliverables, vector assets, and video edits. Manages revision escalations and post-handover assurance to guarantee absolute partner satisfaction.",
+    "focusAreas": [
+      "Quality Control",
+      "Milestone Verification",
+      "Post-Handover Support",
+      "Resolution Tracking"
+    ],
+    "status": "Profile Configurable"
+  }
+]

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface DiscordAvatarProps {
   name: string;
@@ -24,6 +24,11 @@ export const DiscordAvatar: React.FC<DiscordAvatarProps> = ({
   isClickable = false,
 }) => {
   const [imgError, setImgError] = useState(false);
+
+  // When avatarUrl updates (e.g. via cloud sync on mobile), immediately reset error state
+  useEffect(() => {
+    setImgError(false);
+  }, [avatarUrl]);
 
   const sizeMap = {
     sm: 'w-10 h-10 text-xs',
@@ -224,6 +229,8 @@ export const DiscordAvatar: React.FC<DiscordAvatarProps> = ({
           <img
             src={avatarUrl}
             alt={`${name} profile avatar`}
+            loading="eager"
+            decoding="async"
             referrerPolicy="no-referrer"
             onError={() => setImgError(true)}
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
