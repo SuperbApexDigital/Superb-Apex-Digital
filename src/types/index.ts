@@ -133,6 +133,7 @@ export interface TeamMember {
   discordRoles?: string[];
   focusAreas: string[];
   status: 'Active Lead' | 'Profile Configurable' | 'Online Specialist';
+  isCustom?: boolean;
 }
 
 export interface PortfolioItem {

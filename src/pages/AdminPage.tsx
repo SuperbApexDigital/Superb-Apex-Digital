@@ -30,6 +30,12 @@ import {
   RotateCcw,
   Users,
   FileImage,
+  UserPlus,
+  Edit3,
+  Trash2,
+  Plus,
+  X,
+  ChevronDown,
 } from 'lucide-react';
 import { ApexLogo } from '../components/common/ApexLogo';
 
@@ -59,6 +65,114 @@ export const AdminPage: React.FC = () => {
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>(() => teamService.getTeamMembers());
   const [uploadingMemberId, setUploadingMemberId] = useState<string | null>(null);
   const [teamDeptFilter, setTeamDeptFilter] = useState<'All' | TeamDepartment>('All');
+
+  // Add Member Modal State
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [newMemberName, setNewMemberName] = useState('');
+  const [newMemberDept, setNewMemberDept] = useState<TeamDepartment>('Networking Relations Team');
+  const [newMemberDiscordTag, setNewMemberDiscordTag] = useState('');
+  const [newMemberRole, setNewMemberRole] = useState('');
+  const [newMemberBio, setNewMemberBio] = useState('');
+  const [newMemberFocusAreas, setNewMemberFocusAreas] = useState('');
+  const [newMemberStatus, setNewMemberStatus] = useState<'Active Lead' | 'Online Specialist' | 'Profile Configurable'>('Active Lead');
+  const [newMemberAvatarUrl, setNewMemberAvatarUrl] = useState('');
+  const [isAddMemberProcessing, setIsAddMemberProcessing] = useState(false);
+
+  // Edit Member Modal State
+  const [editingMember, setEditingMember] = useState<TeamMember | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editDept, setEditDept] = useState<TeamDepartment>('Networking Relations Team');
+  const [editDiscordTag, setEditDiscordTag] = useState('');
+  const [editRole, setEditRole] = useState('');
+  const [editBio, setEditBio] = useState('');
+  const [editFocusAreas, setEditFocusAreas] = useState('');
+  const [editStatus, setEditStatus] = useState<'Active Lead' | 'Online Specialist' | 'Profile Configurable'>('Active Lead');
+
+  const openEditModal = (member: TeamMember) => {
+    setEditingMember(member);
+    setEditName(member.name);
+    setEditDept(member.department);
+    setEditDiscordTag(member.discordTag);
+    setEditRole(member.role);
+    setEditBio(member.bio);
+    setEditFocusAreas(member.focusAreas.join(', '));
+    setEditStatus(member.status);
+  };
+
+  const handleSaveMemberEdit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingMember || !editName.trim()) return;
+
+    const formattedTag = editDiscordTag.trim().startsWith('@')
+      ? editDiscordTag.trim()
+      : `@${editDiscordTag.trim()}`;
+
+    teamService.updateMember(editingMember.id, {
+      name: editName.trim(),
+      department: editDept,
+      discordTag: formattedTag,
+      role: editRole.trim() || editingMember.role,
+      bio: editBio.trim() || editingMember.bio,
+      focusAreas: editFocusAreas
+        ? editFocusAreas.split(',').map((s) => s.trim()).filter(Boolean)
+        : editingMember.focusAreas,
+      status: editStatus,
+    });
+
+    setTeamMembers(teamService.getTeamMembers());
+    setEditingMember(null);
+    showNotice(`Updated ${editName.trim()}'s profile and name!`);
+  };
+
+  const handleAddMember = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newMemberName.trim()) return;
+
+    setIsAddMemberProcessing(true);
+    try {
+      const formattedTag = newMemberDiscordTag.trim().startsWith('@')
+        ? newMemberDiscordTag.trim()
+        : `@${newMemberDiscordTag.trim() || newMemberName.toLowerCase().replace(/\s+/g, '')}`;
+
+      const areas = newMemberFocusAreas
+        ? newMemberFocusAreas.split(',').map((s) => s.trim()).filter(Boolean)
+        : ['Client Solutions', 'Direct Outreach', 'Dedicated Support'];
+
+      const added = teamService.addMember({
+        name: newMemberName.trim(),
+        department: newMemberDept,
+        discordTag: formattedTag,
+        role: newMemberRole.trim() || (newMemberDept === 'Networking Relations Team' ? 'Networking Relations Specialist' : 'Partner Success Specialist'),
+        bio: newMemberBio.trim() || 'Dedicated specialist providing proactive solutions and unwavering partner support.',
+        focusAreas: areas,
+        status: newMemberStatus,
+        avatarUrl: newMemberAvatarUrl || undefined,
+      });
+
+      setTeamMembers(teamService.getTeamMembers());
+      setIsAddModalOpen(false);
+
+      // Reset form
+      setNewMemberName('');
+      setNewMemberDiscordTag('');
+      setNewMemberRole('');
+      setNewMemberBio('');
+      setNewMemberFocusAreas('');
+      setNewMemberAvatarUrl('');
+
+      showNotice(`Successfully added ${added.name} to ${added.department}!`);
+    } finally {
+      setIsAddMemberProcessing(false);
+    }
+  };
+
+  const handleDeleteMember = (member: TeamMember) => {
+    if (window.confirm(`Are you sure you want to remove ${member.name} from the ${member.department}?`)) {
+      teamService.deleteMember(member.id);
+      setTeamMembers(teamService.getTeamMembers());
+      showNotice(`Removed ${member.name} from the roster.`);
+    }
+  };
 
   // Reply modal / drawer state
   const [replyingReviewId, setReplyingReviewId] = useState<string | null>(null);
@@ -112,10 +226,10 @@ export const AdminPage: React.FC = () => {
   };
 
   const handleResetAllTeamPhotos = () => {
-    if (window.confirm('Are you sure you want to revert all team photos back to their original default assets?')) {
-      teamService.resetAllAvatars();
+    if (window.confirm('Are you sure you want to revert all team photos and rosters back to their original default state?')) {
+      teamService.resetAllToDefault();
       setTeamMembers(teamService.getTeamMembers());
-      showNotice('All team member avatars have been reset to default.');
+      showNotice('All team members and avatars have been reset to default.');
     }
   };
 
@@ -912,6 +1026,15 @@ export const AdminPage: React.FC = () => {
               <div className="flex flex-wrap items-center gap-2 shrink-0">
                 <button
                   type="button"
+                  onClick={() => setIsAddModalOpen(true)}
+                  className="px-4 py-2 text-xs font-bold rounded-xl bg-[#365DE8] hover:bg-[#2e50cb] dark:bg-[#6C8CFF] dark:text-[#0B0F14] text-white transition-all shadow-xs flex items-center gap-1.5"
+                >
+                  <UserPlus className="w-3.5 h-3.5" />
+                  <span>Add New Specialist</span>
+                </button>
+
+                <button
+                  type="button"
                   onClick={() => navigate('team')}
                   className="px-3.5 py-2 text-xs font-semibold rounded-xl bg-[#EEF2F8] hover:bg-[#E2E8F0] dark:bg-[#182230] dark:hover:bg-[#202c3e] text-[#172033] dark:text-[#F5F7FA] border border-[#DCE3EE] dark:border-[#283343] transition-colors flex items-center gap-1.5"
                 >
@@ -923,7 +1046,7 @@ export const AdminPage: React.FC = () => {
                   type="button"
                   onClick={handleResetAllTeamPhotos}
                   className="px-3.5 py-2 text-xs font-semibold rounded-xl text-amber-600 dark:text-amber-400 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 transition-colors flex items-center gap-1.5"
-                  title="Revert all specialists back to initial default photos"
+                  title="Revert all specialists and photos back to default roster"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
                   <span>Reset All to Default</span>
@@ -954,7 +1077,7 @@ export const AdminPage: React.FC = () => {
                     : 'text-[#526078] dark:text-[#B2BDCB] hover:bg-[#EEF2F8] dark:hover:bg-[#1C2636]'
                 }`}
               >
-                <span>Networking Relations Team (6)</span>
+                <span>Networking Relations Team ({teamMembers.filter(m => m.department === 'Networking Relations Team').length})</span>
               </button>
 
               <button
@@ -966,7 +1089,7 @@ export const AdminPage: React.FC = () => {
                     : 'text-[#526078] dark:text-[#B2BDCB] hover:bg-[#EEF2F8] dark:hover:bg-[#1C2636]'
                 }`}
               >
-                <span>Partner Success & Escalations (4)</span>
+                <span>Partner Success & Escalations ({teamMembers.filter(m => m.department === 'Partner Success & Escalations').length})</span>
               </button>
             </div>
           </div>
@@ -1009,17 +1132,24 @@ export const AdminPage: React.FC = () => {
                           )}
                         </div>
 
-                        {/* Status badge */}
+                        {/* Status badges */}
                         <div className="text-right space-y-1">
-                          <span
-                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider ${
-                              hasCustom
-                                ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'
-                                : 'bg-[#EEF2F8] dark:bg-[#1C2636] text-[#526078] dark:text-[#8A99AD] border border-[#DCE3EE] dark:border-[#283343]'
-                            }`}
-                          >
-                            {hasCustom ? 'Custom File Active' : 'Default Asset'}
-                          </span>
+                          <div className="flex flex-col items-end gap-1">
+                            {member.isCustom && (
+                              <span className="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/30">
+                                Added Specialist
+                              </span>
+                            )}
+                            <span
+                              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider ${
+                                hasCustom
+                                  ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'
+                                  : 'bg-[#EEF2F8] dark:bg-[#1C2636] text-[#526078] dark:text-[#8A99AD] border border-[#DCE3EE] dark:border-[#283343]'
+                              }`}
+                            >
+                              {hasCustom ? 'Custom Photo' : 'Default Asset'}
+                            </span>
+                          </div>
                           <span className="block text-[10px] font-semibold text-[#526078] dark:text-[#8A99AD]">
                             {isNetworking ? 'Networking Team' : 'Partner Success'}
                           </span>
@@ -1028,18 +1158,30 @@ export const AdminPage: React.FC = () => {
 
                       {/* EXACT NAME PROMINENTLY BELOW AVATAR */}
                       <div className="space-y-1 pt-1">
-                        <div className="flex items-center gap-2">
-                          <h3 className="text-xl font-extrabold text-[#172033] dark:text-[#F5F7FA]">
-                            {member.name}
-                          </h3>
-                          <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#5865F2]/10 text-[#5865F2] dark:bg-[#5865F2]/20 dark:text-[#8E9BFF] border border-[#5865F2]/30">
-                            <ShieldCheck className="w-3 h-3" />
-                            <span>Discord</span>
-                          </span>
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <h3 className="text-xl font-extrabold text-[#172033] dark:text-[#F5F7FA] tracking-tight">
+                              {member.name}
+                            </h3>
+                            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#5865F2]/10 text-[#5865F2] dark:bg-[#5865F2]/20 dark:text-[#8E9BFF] border border-[#5865F2]/30">
+                              <ShieldCheck className="w-3 h-3" />
+                              <span>Discord</span>
+                            </span>
+                          </div>
+
+                          {/* Quick Edit Name Button */}
+                          <button
+                            type="button"
+                            onClick={() => openEditModal(member)}
+                            className="p-1.5 rounded-lg text-[#365DE8] hover:text-[#2e50cb] dark:text-[#6C8CFF] hover:bg-[#EEF2F8] dark:hover:bg-[#1C2636] transition-colors"
+                            title={`Edit ${member.name}'s name and profile details`}
+                          >
+                            <Edit3 className="w-4 h-4" />
+                          </button>
                         </div>
 
                         {/* Discord Handle (Strictly non-copyable display) */}
-                        <div className="text-xs font-mono text-[#526078] dark:text-[#8A99AD] bg-[#EEF2F8] dark:bg-[#18212F] px-2 py-0.5 rounded-md inline-block border border-[#DCE3EE] dark:border-[#283548]">
+                        <div className="text-xs font-mono text-[#526078] dark:text-[#8A99AD] bg-[#EEF2F8] dark:bg-[#18212F] px-2.5 py-0.5 rounded-md inline-block border border-[#DCE3EE] dark:border-[#283548]">
                           {member.discordTag}
                         </div>
 
@@ -1053,8 +1195,18 @@ export const AdminPage: React.FC = () => {
                       </p>
                     </div>
 
-                    {/* Photo Action Controls */}
+                    {/* Member Controls (Edit Name, Photo, Delete) */}
                     <div className="p-4 bg-[#F8FAFC] dark:bg-[#18212F] border-t border-[#DCE3EE] dark:border-[#283548] flex flex-col gap-2">
+                      {/* Edit Name & Profile Button */}
+                      <button
+                        type="button"
+                        onClick={() => openEditModal(member)}
+                        className="w-full py-2 px-3 text-xs font-bold rounded-xl border border-[#365DE8]/30 dark:border-[#6C8CFF]/30 text-[#365DE8] dark:text-[#6C8CFF] bg-[#365DE8]/10 hover:bg-[#365DE8]/20 transition-colors flex items-center justify-center gap-1.5"
+                      >
+                        <Edit3 className="w-3.5 h-3.5" />
+                        <span>Edit Name & Details</span>
+                      </button>
+
                       {/* Hidden File Input */}
                       <input
                         type="file"
@@ -1070,39 +1222,52 @@ export const AdminPage: React.FC = () => {
                         }}
                       />
 
-                      {/* Upload Button */}
-                      <label
-                        htmlFor={`file-input-${member.id}`}
-                        className={`w-full py-2 px-3 text-xs font-bold rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer ${
-                          isUploading
-                            ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 cursor-not-allowed'
-                            : 'bg-[#365DE8] hover:bg-[#2e50cb] text-white shadow-xs'
-                        }`}
-                      >
-                        {isUploading ? (
-                          <>
-                            <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                            <span>Compressing & Saving...</span>
-                          </>
-                        ) : (
-                          <>
-                            <Upload className="w-3.5 h-3.5" />
-                            <span>{hasCustom ? 'Replace Custom Photo' : 'Upload Exact Image File'}</span>
-                          </>
-                        )}
-                      </label>
+                      <div className="flex items-center gap-2">
+                        {/* Upload Button */}
+                        <label
+                          htmlFor={`file-input-${member.id}`}
+                          className={`flex-1 py-1.5 px-3 text-xs font-semibold rounded-xl flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                            isUploading
+                              ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 cursor-not-allowed'
+                              : 'bg-[#172033] hover:bg-[#222E40] text-white dark:bg-white dark:text-[#0B0F14] shadow-xs'
+                          }`}
+                        >
+                          {isUploading ? (
+                            <>
+                              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                              <span>Compressing...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Upload className="w-3.5 h-3.5" />
+                              <span>{hasCustom ? 'Change Photo' : 'Upload Photo'}</span>
+                            </>
+                          )}
+                        </label>
 
-                      {/* Revert Button if Custom Photo Exists */}
-                      {hasCustom && (
+                        {/* Revert Button if Custom Photo Exists */}
+                        {hasCustom && !member.isCustom && (
+                          <button
+                            type="button"
+                            onClick={() => handleRevertPhoto(member.id)}
+                            className="px-2.5 py-1.5 text-xs font-semibold rounded-xl text-[#526078] dark:text-[#B2BDCB] hover:bg-[#EEF2F8] dark:hover:bg-[#1F2B3D] transition-colors flex items-center gap-1"
+                            title="Revert to default asset"
+                          >
+                            <RotateCcw className="w-3 h-3" />
+                            <span className="hidden sm:inline">Revert</span>
+                          </button>
+                        )}
+
+                        {/* Delete Button (Allowed for all or custom) */}
                         <button
                           type="button"
-                          onClick={() => handleRevertPhoto(member.id)}
-                          className="w-full py-1.5 px-3 text-xs font-semibold rounded-xl text-[#526078] dark:text-[#B2BDCB] hover:bg-[#EEF2F8] dark:hover:bg-[#1F2B3D] transition-colors flex items-center justify-center gap-1.5"
+                          onClick={() => handleDeleteMember(member)}
+                          className="p-2 text-xs font-semibold rounded-xl text-red-600 dark:text-red-400 bg-red-500/10 hover:bg-red-500/20 transition-colors"
+                          title={`Remove ${member.name} from team`}
                         >
-                          <RotateCcw className="w-3 h-3" />
-                          <span>Revert to Default Asset</span>
+                          <Trash2 className="w-3.5 h-3.5" />
                         </button>
-                      )}
+                      </div>
                     </div>
                   </div>
                 );
@@ -1294,6 +1459,421 @@ export const AdminPage: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* ADD NEW SPECIALIST MODAL */}
+      {isAddModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-fade-in">
+          <div className="w-full max-w-xl max-h-[90vh] overflow-y-auto rounded-3xl bg-white dark:bg-[#121923] border border-[#DCE3EE] dark:border-[#283343] p-6 sm:p-8 shadow-2xl space-y-6">
+            <div className="flex items-center justify-between pb-3 border-b border-[#DCE3EE] dark:border-[#283343]">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-[#365DE8]/10 text-[#365DE8] dark:bg-[#6C8CFF]/20 dark:text-[#6C8CFF] flex items-center justify-center">
+                  <UserPlus className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-extrabold text-[#172033] dark:text-[#F5F7FA]">
+                    Add New Team Member
+                  </h3>
+                  <p className="text-xs text-[#526078] dark:text-[#8A99AD]">
+                    Add a specialist to either team with their profile photo and exact Discord name.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsAddModalOpen(false)}
+                className="w-8 h-8 rounded-full bg-[#EEF2F8] hover:bg-[#E2E8F0] dark:bg-[#18212F] dark:hover:bg-[#253042] text-[#526078] dark:text-[#B2BDCB] flex items-center justify-center transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddMember} className="space-y-4">
+              {/* Department Selection */}
+              <div className="space-y-1.5">
+                <label className="block text-xs font-bold text-[#172033] dark:text-[#F5F7FA]">
+                  Select Team Division *
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setNewMemberDept('Networking Relations Team')}
+                    className={`p-3 rounded-xl border text-left transition-all flex items-center gap-2.5 ${
+                      newMemberDept === 'Networking Relations Team'
+                        ? 'border-[#365DE8] bg-[#365DE8]/10 text-[#365DE8] dark:border-[#6C8CFF] dark:text-[#6C8CFF]'
+                        : 'border-[#DCE3EE] dark:border-[#283343] text-[#526078] dark:text-[#B2BDCB]'
+                    }`}
+                  >
+                    <div className={`w-3 h-3 rounded-full border-2 ${
+                      newMemberDept === 'Networking Relations Team' ? 'border-[#365DE8] bg-[#365DE8]' : 'border-gray-400'
+                    }`} />
+                    <div>
+                      <div className="text-xs font-bold">Networking Relations Team</div>
+                      <div className="text-[10px] opacity-80">Frontline Outreach & Problem Solvers</div>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setNewMemberDept('Partner Success & Escalations')}
+                    className={`p-3 rounded-xl border text-left transition-all flex items-center gap-2.5 ${
+                      newMemberDept === 'Partner Success & Escalations'
+                        ? 'border-[#6D4AE6] bg-[#6D4AE6]/10 text-[#6D4AE6] dark:border-[#9B8AFB] dark:text-[#9B8AFB]'
+                        : 'border-[#DCE3EE] dark:border-[#283343] text-[#526078] dark:text-[#B2BDCB]'
+                    }`}
+                  >
+                    <div className={`w-3 h-3 rounded-full border-2 ${
+                      newMemberDept === 'Partner Success & Escalations' ? 'border-[#6D4AE6] bg-[#6D4AE6]' : 'border-gray-400'
+                    }`} />
+                    <div>
+                      <div className="text-xs font-bold">Partner Success & Escalations</div>
+                      <div className="text-[10px] opacity-80">Operational Backbone & SLAs</div>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              {/* Name & Discord Tag */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="block text-xs font-bold text-[#172033] dark:text-[#F5F7FA]">
+                    Specialist Name * (Displayed below image)
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. NovaStrike or David"
+                    value={newMemberName}
+                    onChange={(e) => setNewMemberName(e.target.value)}
+                    className="w-full px-3.5 py-2 text-xs rounded-xl border border-[#DCE3EE] dark:border-[#283343] bg-white dark:bg-[#182230] text-[#172033] dark:text-[#F5F7FA] focus:outline-none focus:ring-2 focus:ring-[#365DE8]"
+                  />
+                  <p className="text-[10px] text-[#526078] dark:text-[#8A99AD]">
+                    Matches the name on their Discord profile picture.
+                  </p>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="block text-xs font-bold text-[#172033] dark:text-[#F5F7FA]">
+                    Discord Handle *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. @novastrike"
+                    value={newMemberDiscordTag}
+                    onChange={(e) => setNewMemberDiscordTag(e.target.value)}
+                    className="w-full px-3.5 py-2 text-xs rounded-xl border border-[#DCE3EE] dark:border-[#283343] bg-white dark:bg-[#182230] text-[#172033] dark:text-[#F5F7FA] focus:outline-none focus:ring-2 focus:ring-[#365DE8] font-mono"
+                  />
+                  <p className="text-[10px] text-[#526078] dark:text-[#8A99AD]">
+                    Display-only reference (visitors cannot copy).
+                  </p>
+                </div>
+              </div>
+
+              {/* Role Title */}
+              <div className="space-y-1">
+                <label className="block text-xs font-bold text-[#172033] dark:text-[#F5F7FA]">
+                  Operational Role / Title *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder={
+                    newMemberDept === 'Networking Relations Team'
+                      ? 'e.g. Senior Creator Outreach & Solutions Specialist'
+                      : 'e.g. Lead Discord Security & SLA Escalations Engineer'
+                  }
+                  value={newMemberRole}
+                  onChange={(e) => setNewMemberRole(e.target.value)}
+                  className="w-full px-3.5 py-2 text-xs rounded-xl border border-[#DCE3EE] dark:border-[#283343] bg-white dark:bg-[#182230] text-[#172033] dark:text-[#F5F7FA] focus:outline-none focus:ring-2 focus:ring-[#365DE8]"
+                />
+              </div>
+
+              {/* Bio */}
+              <div className="space-y-1">
+                <label className="block text-xs font-bold text-[#172033] dark:text-[#F5F7FA]">
+                  Bio & Client Mission *
+                </label>
+                <textarea
+                  rows={3}
+                  required
+                  placeholder="Explain how this specialist reaches out, solves problems, and supports clients..."
+                  value={newMemberBio}
+                  onChange={(e) => setNewMemberBio(e.target.value)}
+                  className="w-full px-3.5 py-2 text-xs rounded-xl border border-[#DCE3EE] dark:border-[#283343] bg-white dark:bg-[#182230] text-[#172033] dark:text-[#F5F7FA] focus:outline-none focus:ring-2 focus:ring-[#365DE8]"
+                />
+              </div>
+
+              {/* Focus Areas & Status */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="block text-xs font-bold text-[#172033] dark:text-[#F5F7FA]">
+                    Focus Areas (comma-separated)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Proactive Outreach, Friction Diagnosis, Dedicated Support"
+                    value={newMemberFocusAreas}
+                    onChange={(e) => setNewMemberFocusAreas(e.target.value)}
+                    className="w-full px-3.5 py-2 text-xs rounded-xl border border-[#DCE3EE] dark:border-[#283343] bg-white dark:bg-[#182230] text-[#172033] dark:text-[#F5F7FA] focus:outline-none focus:ring-2 focus:ring-[#365DE8]"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="block text-xs font-bold text-[#172033] dark:text-[#F5F7FA]">
+                    Status Indicator
+                  </label>
+                  <select
+                    value={newMemberStatus}
+                    onChange={(e) => setNewMemberStatus(e.target.value as any)}
+                    className="w-full px-3.5 py-2 text-xs rounded-xl border border-[#DCE3EE] dark:border-[#283343] bg-white dark:bg-[#182230] text-[#172033] dark:text-[#F5F7FA] focus:outline-none focus:ring-2 focus:ring-[#365DE8]"
+                  >
+                    <option value="Active Lead">Active Lead</option>
+                    <option value="Online Specialist">Online Specialist</option>
+                    <option value="Profile Configurable">Profile Configurable</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Profile Image File Upload */}
+              <div className="space-y-1.5 pt-2 border-t border-[#DCE3EE] dark:border-[#283343]">
+                <label className="block text-xs font-bold text-[#172033] dark:text-[#F5F7FA]">
+                  Upload Profile Picture (Optional, can be added later)
+                </label>
+                <div className="flex items-center gap-4">
+                  {newMemberAvatarUrl ? (
+                    <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-[#365DE8] shrink-0">
+                      <img src={newMemberAvatarUrl} alt="Preview" className="w-full h-full object-cover" />
+                    </div>
+                  ) : (
+                    <div className="w-14 h-14 rounded-full bg-[#EEF2F8] dark:bg-[#18212F] flex items-center justify-center text-xs font-bold text-[#526078] shrink-0">
+                      {newMemberName ? newMemberName.slice(0, 2).toUpperCase() : 'PFP'}
+                    </div>
+                  )}
+
+                  <div className="flex-1">
+                    <input
+                      type="file"
+                      id="new-member-avatar-input"
+                      accept="image/png, image/jpeg, image/jpg, image/webp"
+                      className="hidden"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          try {
+                            const compressed = await TeamService.compressImageFile(file, 500, 0.9);
+                            setNewMemberAvatarUrl(compressed);
+                          } catch {
+                            showNotice('Failed to process image');
+                          }
+                        }
+                      }}
+                    />
+                    <label
+                      htmlFor="new-member-avatar-input"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-[#EEF2F8] hover:bg-[#E2E8F0] dark:bg-[#182230] dark:hover:bg-[#202c3e] cursor-pointer text-[#172033] dark:text-[#F5F7FA] border border-[#DCE3EE] dark:border-[#283343]"
+                    >
+                      <Upload className="w-3.5 h-3.5" />
+                      <span>{newMemberAvatarUrl ? 'Change Selected Image' : 'Select Image File'}</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              {/* Form Action Buttons */}
+              <div className="pt-4 border-t border-[#DCE3EE] dark:border-[#283343] flex items-center justify-end gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setIsAddModalOpen(false)}
+                  className="px-4 py-2 text-xs font-semibold rounded-xl text-[#526078] dark:text-[#B2BDCB] hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isAddMemberProcessing || !newMemberName.trim()}
+                  className="px-5 py-2 text-xs font-bold rounded-xl text-white bg-[#365DE8] hover:bg-[#2e50cb] dark:bg-[#6C8CFF] dark:text-[#0B0F14] transition-all disabled:opacity-50 flex items-center gap-1.5"
+                >
+                  {isAddMemberProcessing ? (
+                    <>
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      <span>Adding...</span>
+                    </>
+                  ) : (
+                    <>
+                      <UserPlus className="w-3.5 h-3.5" />
+                      <span>Add Specialist to Roster</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* EDIT SPECIALIST NAME & PROFILE MODAL */}
+      {editingMember && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-fade-in">
+          <div className="w-full max-w-xl max-h-[90vh] overflow-y-auto rounded-3xl bg-white dark:bg-[#121923] border border-[#DCE3EE] dark:border-[#283343] p-6 sm:p-8 shadow-2xl space-y-6">
+            <div className="flex items-center justify-between pb-3 border-b border-[#DCE3EE] dark:border-[#283343]">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full overflow-hidden shrink-0">
+                  <DiscordAvatar
+                    name={editName || editingMember.name}
+                    initials={editingMember.initials}
+                    avatarUrl={editingMember.avatarUrl}
+                    size="md"
+                    showStatus={false}
+                  />
+                </div>
+                <div>
+                  <h3 className="text-lg font-extrabold text-[#172033] dark:text-[#F5F7FA] flex items-center gap-2">
+                    <span>Edit Specialist Profile</span>
+                  </h3>
+                  <p className="text-xs text-[#526078] dark:text-[#8A99AD]">
+                    Edit the name and details for {editingMember.name}.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setEditingMember(null)}
+                className="w-8 h-8 rounded-full bg-[#EEF2F8] hover:bg-[#E2E8F0] dark:bg-[#18212F] dark:hover:bg-[#253042] text-[#526078] dark:text-[#B2BDCB] flex items-center justify-center transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveMemberEdit} className="space-y-4">
+              {/* PRIMARY NAME EDIT (HIGHLIGHTED) */}
+              <div className="p-4 rounded-2xl bg-[#365DE8]/10 dark:bg-[#6C8CFF]/10 border border-[#365DE8]/30 dark:border-[#6C8CFF]/30 space-y-1.5">
+                <label className="block text-xs font-extrabold text-[#365DE8] dark:text-[#6C8CFF] uppercase tracking-wide">
+                  Specialist Name * (Displayed Under Profile Image)
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  placeholder="e.g. CaptainDav, KryonAce, daveee, jamiu..."
+                  className="w-full px-3.5 py-2.5 text-sm font-bold rounded-xl border-2 border-[#365DE8] dark:border-[#6C8CFF] bg-white dark:bg-[#121923] text-[#172033] dark:text-[#F5F7FA] focus:outline-none"
+                />
+                <p className="text-[11px] text-[#526078] dark:text-[#CBD5E1]">
+                  This is the exact name that corresponds to their Discord profile picture and appears as the prominent heading below their avatar on the public site and in the photo lightbox.
+                </p>
+              </div>
+
+              {/* Department & Discord Tag */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="block text-xs font-bold text-[#172033] dark:text-[#F5F7FA]">
+                    Team Division *
+                  </label>
+                  <select
+                    value={editDept}
+                    onChange={(e) => setEditDept(e.target.value as TeamDepartment)}
+                    className="w-full px-3.5 py-2 text-xs rounded-xl border border-[#DCE3EE] dark:border-[#283343] bg-white dark:bg-[#182230] text-[#172033] dark:text-[#F5F7FA] focus:outline-none focus:ring-2 focus:ring-[#365DE8]"
+                  >
+                    <option value="Networking Relations Team">Networking Relations Team</option>
+                    <option value="Partner Success & Escalations">Partner Success & Escalations</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="block text-xs font-bold text-[#172033] dark:text-[#F5F7FA]">
+                    Discord Handle *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={editDiscordTag}
+                    onChange={(e) => setEditDiscordTag(e.target.value)}
+                    className="w-full px-3.5 py-2 text-xs rounded-xl border border-[#DCE3EE] dark:border-[#283343] bg-white dark:bg-[#182230] text-[#172033] dark:text-[#F5F7FA] focus:outline-none focus:ring-2 focus:ring-[#365DE8] font-mono"
+                  />
+                </div>
+              </div>
+
+              {/* Operational Role */}
+              <div className="space-y-1">
+                <label className="block text-xs font-bold text-[#172033] dark:text-[#F5F7FA]">
+                  Operational Role Title *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editRole}
+                  onChange={(e) => setEditRole(e.target.value)}
+                  className="w-full px-3.5 py-2 text-xs rounded-xl border border-[#DCE3EE] dark:border-[#283343] bg-white dark:bg-[#182230] text-[#172033] dark:text-[#F5F7FA] focus:outline-none focus:ring-2 focus:ring-[#365DE8]"
+                />
+              </div>
+
+              {/* Bio */}
+              <div className="space-y-1">
+                <label className="block text-xs font-bold text-[#172033] dark:text-[#F5F7FA]">
+                  Bio & Professional Summary *
+                </label>
+                <textarea
+                  rows={3}
+                  required
+                  value={editBio}
+                  onChange={(e) => setEditBio(e.target.value)}
+                  className="w-full px-3.5 py-2 text-xs rounded-xl border border-[#DCE3EE] dark:border-[#283343] bg-white dark:bg-[#182230] text-[#172033] dark:text-[#F5F7FA] focus:outline-none focus:ring-2 focus:ring-[#365DE8]"
+                />
+              </div>
+
+              {/* Focus Areas & Status */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="block text-xs font-bold text-[#172033] dark:text-[#F5F7FA]">
+                    Focus Areas (comma-separated)
+                  </label>
+                  <input
+                    type="text"
+                    value={editFocusAreas}
+                    onChange={(e) => setEditFocusAreas(e.target.value)}
+                    className="w-full px-3.5 py-2 text-xs rounded-xl border border-[#DCE3EE] dark:border-[#283343] bg-white dark:bg-[#182230] text-[#172033] dark:text-[#F5F7FA] focus:outline-none focus:ring-2 focus:ring-[#365DE8]"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="block text-xs font-bold text-[#172033] dark:text-[#F5F7FA]">
+                    Status
+                  </label>
+                  <select
+                    value={editStatus}
+                    onChange={(e) => setEditStatus(e.target.value as any)}
+                    className="w-full px-3.5 py-2 text-xs rounded-xl border border-[#DCE3EE] dark:border-[#283343] bg-white dark:bg-[#182230] text-[#172033] dark:text-[#F5F7FA] focus:outline-none focus:ring-2 focus:ring-[#365DE8]"
+                  >
+                    <option value="Active Lead">Active Lead</option>
+                    <option value="Online Specialist">Online Specialist</option>
+                    <option value="Profile Configurable">Profile Configurable</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Form Buttons */}
+              <div className="pt-4 border-t border-[#DCE3EE] dark:border-[#283343] flex items-center justify-end gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setEditingMember(null)}
+                  className="px-4 py-2 text-xs font-semibold rounded-xl text-[#526078] dark:text-[#B2BDCB] hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={!editName.trim()}
+                  className="px-5 py-2 text-xs font-bold rounded-xl text-white bg-[#365DE8] hover:bg-[#2e50cb] dark:bg-[#6C8CFF] dark:text-[#0B0F14] transition-all disabled:opacity-50 flex items-center gap-1.5"
+                >
+                  <Check className="w-3.5 h-3.5" />
+                  <span>Save Changes</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
+
