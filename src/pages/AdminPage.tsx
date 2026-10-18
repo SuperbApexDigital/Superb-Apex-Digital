@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from '../context/RouterContext';
 import { reviewService } from '../services/reviewService';
-import { Review, ReviewStatus } from '../types';
+import { teamService, TeamService } from '../services/teamService';
+import { Review, ReviewStatus, TeamMember, TeamDepartment } from '../types';
+import { DiscordAvatar } from '../components/DiscordAvatar';
 import {
   Lock,
   Unlock,
@@ -23,6 +25,11 @@ import {
   AlertCircle,
   Sliders,
   Check,
+  Upload,
+  Camera,
+  RotateCcw,
+  Users,
+  FileImage,
 } from 'lucide-react';
 import { ApexLogo } from '../components/common/ApexLogo';
 
@@ -41,12 +48,17 @@ export const AdminPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
 
-  // Tab state: 'pending' | 'approved' | 'rejected' | 'settings'
-  const [activeTab, setActiveTab] = useState<'pending' | 'approved' | 'rejected' | 'settings'>('pending');
+  // Tab state: 'pending' | 'approved' | 'rejected' | 'team_photos' | 'settings'
+  const [activeTab, setActiveTab] = useState<'pending' | 'approved' | 'rejected' | 'team_photos' | 'settings'>('pending');
 
   // Reviews Data
   const [reviews, setReviews] = useState<Review[]>([]);
   const [stats, setStats] = useState(reviewService.getStats());
+
+  // Team Roster & Profile Photos Data
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>(() => teamService.getTeamMembers());
+  const [uploadingMemberId, setUploadingMemberId] = useState<string | null>(null);
+  const [teamDeptFilter, setTeamDeptFilter] = useState<'All' | TeamDepartment>('All');
 
   // Reply modal / drawer state
   const [replyingReviewId, setReplyingReviewId] = useState<string | null>(null);
@@ -71,6 +83,40 @@ export const AdminPage: React.FC = () => {
   const loadData = () => {
     setReviews(reviewService.getAllReviews());
     setStats(reviewService.getStats());
+    setTeamMembers(teamService.getTeamMembers());
+  };
+
+  // Team Photo Handlers
+  const handlePhotoUpload = async (memberId: string, file: File) => {
+    if (!file) return;
+    try {
+      setUploadingMemberId(memberId);
+      const compressedDataUrl = await TeamService.compressImageFile(file, 500, 0.9);
+      teamService.updateMemberAvatar(memberId, compressedDataUrl);
+      setTeamMembers(teamService.getTeamMembers());
+      const m = teamMembers.find((item) => item.id === memberId);
+      showNotice(`Custom profile photo uploaded for ${m?.name || 'specialist'}! Live across the site.`);
+    } catch (err) {
+      console.error('Error uploading photo:', err);
+      showNotice('Failed to process image file. Please use a PNG, JPG, or WebP image.');
+    } finally {
+      setUploadingMemberId(null);
+    }
+  };
+
+  const handleRevertPhoto = (memberId: string) => {
+    const m = teamMembers.find((item) => item.id === memberId);
+    teamService.removeMemberAvatar(memberId);
+    setTeamMembers(teamService.getTeamMembers());
+    showNotice(`Reverted ${m?.name || 'specialist'} photo to default asset.`);
+  };
+
+  const handleResetAllTeamPhotos = () => {
+    if (window.confirm('Are you sure you want to revert all team photos back to their original default assets?')) {
+      teamService.resetAllAvatars();
+      setTeamMembers(teamService.getTeamMembers());
+      showNotice('All team member avatars have been reset to default.');
+    }
   };
 
   useEffect(() => {
@@ -360,7 +406,7 @@ export const AdminPage: React.FC = () => {
       </div>
 
       {/* KPI METRIC CARDS */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {/* Pending Card */}
         <div
           onClick={() => setActiveTab('pending')}
@@ -391,7 +437,7 @@ export const AdminPage: React.FC = () => {
             )}
           </div>
           <p className="text-[11px] text-[#526078] dark:text-[#B2BDCB] mt-1">
-            Submitted reviews awaiting your review and approval
+            Submitted reviews awaiting decision
           </p>
         </div>
 
@@ -417,7 +463,33 @@ export const AdminPage: React.FC = () => {
             <span className="text-xs text-[#526078] dark:text-[#B2BDCB]">Live on site</span>
           </div>
           <p className="text-[11px] text-[#526078] dark:text-[#B2BDCB] mt-1">
-            Active verified reviews displayed to public visitors
+            Active verified client reviews
+          </p>
+        </div>
+
+        {/* Team Profile Photos Card (NEW) */}
+        <div
+          onClick={() => setActiveTab('team_photos')}
+          className={`p-5 rounded-2xl bg-white dark:bg-[#121923] border transition-all cursor-pointer ${
+            activeTab === 'team_photos'
+              ? 'ring-2 ring-[#365DE8] dark:ring-[#6C8CFF]'
+              : 'border-[#DCE3EE] dark:border-[#283343] hover:border-[#B2BDCB] dark:hover:border-[#3E4F66]'
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-[#365DE8] dark:text-[#6C8CFF] uppercase tracking-wider">
+              Team Photos
+            </span>
+            <Camera className="w-4 h-4 text-[#365DE8] dark:text-[#6C8CFF]" />
+          </div>
+          <div className="mt-3 flex items-baseline gap-2">
+            <span className="text-3xl font-extrabold text-[#172033] dark:text-[#F5F7FA]">
+              {teamMembers.length}
+            </span>
+            <span className="text-xs text-[#526078] dark:text-[#B2BDCB]">Specialists</span>
+          </div>
+          <p className="text-[11px] text-[#526078] dark:text-[#B2BDCB] mt-1">
+            Upload custom Discord profile images
           </p>
         </div>
 
@@ -436,7 +508,7 @@ export const AdminPage: React.FC = () => {
             <span className="text-xs text-[#526078] dark:text-[#B2BDCB]">/ 5.0</span>
           </div>
           <p className="text-[11px] text-[#526078] dark:text-[#B2BDCB] mt-1">
-            Across {stats.approvedCount} public client reviews
+            Across {stats.approvedCount} public reviews
           </p>
         </div>
 
@@ -451,7 +523,7 @@ export const AdminPage: React.FC = () => {
         >
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-[#526078] dark:text-[#B2BDCB] uppercase tracking-wider">
-              Archived / Rejected
+              Archived
             </span>
             <XCircle className="w-4 h-4 text-red-500" />
           </div>
@@ -461,7 +533,7 @@ export const AdminPage: React.FC = () => {
             </span>
           </div>
           <p className="text-[11px] text-[#526078] dark:text-[#B2BDCB] mt-1">
-            Archived reviews hidden from public display
+            Archived client submissions
           </p>
         </div>
       </div>
@@ -497,6 +569,22 @@ export const AdminPage: React.FC = () => {
           <span>Approved (Live)</span>
           <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-white/20 dark:bg-black/20">
             {approvedList.length}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('team_photos')}
+          className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all ${
+            activeTab === 'team_photos'
+              ? 'bg-[#365DE8] text-white dark:bg-[#6C8CFF] dark:text-[#0B0F14]'
+              : 'text-[#526078] dark:text-[#B2BDCB] hover:bg-[#EEF2F8] dark:hover:bg-[#1C2636]'
+          }`}
+        >
+          <Camera className="w-3.5 h-3.5" />
+          <span>Team Profile Photos</span>
+          <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">
+            {teamMembers.length}
           </span>
         </button>
 
@@ -802,7 +890,228 @@ export const AdminPage: React.FC = () => {
         </div>
       )}
 
-      {/* 4. SECURITY & PERSONAL PASSWORD TAB */}
+      {/* 4. TEAM PROFILE PHOTOS & ROSTER MANAGEMENT TAB */}
+      {activeTab === 'team_photos' && (
+        <div className="space-y-8">
+          {/* Section Header & Subtitle */}
+          <div className="rounded-2xl bg-white dark:bg-[#121923] border border-[#DCE3EE] dark:border-[#283343] p-6 sm:p-8 space-y-4 shadow-xs">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="space-y-1">
+                <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md text-xs font-semibold bg-[#365DE8]/10 text-[#365DE8] dark:bg-[#6C8CFF]/15 dark:text-[#6C8CFF] border border-[#365DE8]/20">
+                  <Camera className="w-3.5 h-3.5" />
+                  <span>Team Profile Photo Management Suite</span>
+                </div>
+                <h2 className="text-xl sm:text-2xl font-bold tracking-tight">
+                  Upload & Swap Team Profile Images
+                </h2>
+                <p className="text-xs text-[#526078] dark:text-[#B2BDCB] max-w-2xl leading-relaxed">
+                  Upload your exact Discord profile images, screenshots, or portraits directly from your computer. Any uploaded photo is instantly optimized and appears immediately on the public Team page, profile cards, and the fullscreen photo lightbox.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => navigate('team')}
+                  className="px-3.5 py-2 text-xs font-semibold rounded-xl bg-[#EEF2F8] hover:bg-[#E2E8F0] dark:bg-[#182230] dark:hover:bg-[#202c3e] text-[#172033] dark:text-[#F5F7FA] border border-[#DCE3EE] dark:border-[#283343] transition-colors flex items-center gap-1.5"
+                >
+                  <Eye className="w-3.5 h-3.5 text-[#365DE8] dark:text-[#6C8CFF]" />
+                  <span>Preview Public Team Page</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleResetAllTeamPhotos}
+                  className="px-3.5 py-2 text-xs font-semibold rounded-xl text-amber-600 dark:text-amber-400 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 transition-colors flex items-center gap-1.5"
+                  title="Revert all specialists back to initial default photos"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>Reset All to Default</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Division Filter Tabs */}
+            <div className="flex items-center gap-2 pt-2 border-t border-[#DCE3EE] dark:border-[#283343] overflow-x-auto scrollbar-none">
+              <button
+                type="button"
+                onClick={() => setTeamDeptFilter('All')}
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  teamDeptFilter === 'All'
+                    ? 'bg-[#172033] text-white dark:bg-white dark:text-[#0B0F14]'
+                    : 'text-[#526078] dark:text-[#B2BDCB] hover:bg-[#EEF2F8] dark:hover:bg-[#1C2636]'
+                }`}
+              >
+                All Specialists ({teamMembers.length})
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setTeamDeptFilter('Networking Relations Team')}
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                  teamDeptFilter === 'Networking Relations Team'
+                    ? 'bg-[#365DE8] text-white dark:bg-[#6C8CFF] dark:text-[#0B0F14]'
+                    : 'text-[#526078] dark:text-[#B2BDCB] hover:bg-[#EEF2F8] dark:hover:bg-[#1C2636]'
+                }`}
+              >
+                <span>Networking Relations Team (6)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setTeamDeptFilter('Partner Success & Escalations')}
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                  teamDeptFilter === 'Partner Success & Escalations'
+                    ? 'bg-[#6D4AE6] text-white dark:bg-[#9B8AFB] dark:text-[#0B0F14]'
+                    : 'text-[#526078] dark:text-[#B2BDCB] hover:bg-[#EEF2F8] dark:hover:bg-[#1C2636]'
+                }`}
+              >
+                <span>Partner Success & Escalations (4)</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Specialists Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {teamMembers
+              .filter((m) => teamDeptFilter === 'All' || m.department === teamDeptFilter)
+              .map((member) => {
+                const hasCustom = teamService.hasCustomAvatar(member.id);
+                const isUploading = uploadingMemberId === member.id;
+                const isNetworking = member.department === 'Networking Relations Team';
+
+                return (
+                  <div
+                    key={member.id}
+                    className="rounded-2xl bg-white dark:bg-[#121923] border border-[#DCE3EE] dark:border-[#283343] overflow-hidden flex flex-col justify-between shadow-xs hover:border-[#365DE8]/40 dark:hover:border-[#6C8CFF]/40 transition-all"
+                  >
+                    {/* Member Header */}
+                    <div className="p-6 space-y-4">
+                      <div className="flex items-start justify-between gap-3">
+                        {/* Circular Avatar */}
+                        <div className="relative">
+                          <DiscordAvatar
+                            name={member.name}
+                            initials={member.initials}
+                            avatarUrl={member.avatarUrl}
+                            theme={member.avatarTheme}
+                            size="xl"
+                            showStatus={true}
+                            status={member.status}
+                          />
+                          {hasCustom && (
+                            <span
+                              title="Custom photo file is active"
+                              className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-emerald-500 border-2 border-white dark:border-[#121923] flex items-center justify-center text-[9px] text-white font-bold"
+                            >
+                              ✓
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Status badge */}
+                        <div className="text-right space-y-1">
+                          <span
+                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider ${
+                              hasCustom
+                                ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'
+                                : 'bg-[#EEF2F8] dark:bg-[#1C2636] text-[#526078] dark:text-[#8A99AD] border border-[#DCE3EE] dark:border-[#283343]'
+                            }`}
+                          >
+                            {hasCustom ? 'Custom File Active' : 'Default Asset'}
+                          </span>
+                          <span className="block text-[10px] font-semibold text-[#526078] dark:text-[#8A99AD]">
+                            {isNetworking ? 'Networking Team' : 'Partner Success'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* EXACT NAME PROMINENTLY BELOW AVATAR */}
+                      <div className="space-y-1 pt-1">
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-xl font-extrabold text-[#172033] dark:text-[#F5F7FA]">
+                            {member.name}
+                          </h3>
+                          <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#5865F2]/10 text-[#5865F2] dark:bg-[#5865F2]/20 dark:text-[#8E9BFF] border border-[#5865F2]/30">
+                            <ShieldCheck className="w-3 h-3" />
+                            <span>Discord</span>
+                          </span>
+                        </div>
+
+                        {/* Discord Handle (Strictly non-copyable display) */}
+                        <div className="text-xs font-mono text-[#526078] dark:text-[#8A99AD] bg-[#EEF2F8] dark:bg-[#18212F] px-2 py-0.5 rounded-md inline-block border border-[#DCE3EE] dark:border-[#283548]">
+                          {member.discordTag}
+                        </div>
+
+                        <p className="text-xs font-semibold text-[#365DE8] dark:text-[#6C8CFF] pt-1">
+                          {member.role}
+                        </p>
+                      </div>
+
+                      <p className="text-xs text-[#526078] dark:text-[#B2BDCB] line-clamp-2">
+                        {member.bio}
+                      </p>
+                    </div>
+
+                    {/* Photo Action Controls */}
+                    <div className="p-4 bg-[#F8FAFC] dark:bg-[#18212F] border-t border-[#DCE3EE] dark:border-[#283548] flex flex-col gap-2">
+                      {/* Hidden File Input */}
+                      <input
+                        type="file"
+                        id={`file-input-${member.id}`}
+                        accept="image/png, image/jpeg, image/jpg, image/webp"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            handlePhotoUpload(member.id, file);
+                            e.target.value = '';
+                          }
+                        }}
+                      />
+
+                      {/* Upload Button */}
+                      <label
+                        htmlFor={`file-input-${member.id}`}
+                        className={`w-full py-2 px-3 text-xs font-bold rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                          isUploading
+                            ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 cursor-not-allowed'
+                            : 'bg-[#365DE8] hover:bg-[#2e50cb] text-white shadow-xs'
+                        }`}
+                      >
+                        {isUploading ? (
+                          <>
+                            <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                            <span>Compressing & Saving...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="w-3.5 h-3.5" />
+                            <span>{hasCustom ? 'Replace Custom Photo' : 'Upload Exact Image File'}</span>
+                          </>
+                        )}
+                      </label>
+
+                      {/* Revert Button if Custom Photo Exists */}
+                      {hasCustom && (
+                        <button
+                          type="button"
+                          onClick={() => handleRevertPhoto(member.id)}
+                          className="w-full py-1.5 px-3 text-xs font-semibold rounded-xl text-[#526078] dark:text-[#B2BDCB] hover:bg-[#EEF2F8] dark:hover:bg-[#1F2B3D] transition-colors flex items-center justify-center gap-1.5"
+                        >
+                          <RotateCcw className="w-3 h-3" />
+                          <span>Revert to Default Asset</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+          </div>
+        </div>
+      )}
+
+      {/* 5. SECURITY & PERSONAL PASSWORD TAB */}
       {activeTab === 'settings' && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* Password Change Form */}

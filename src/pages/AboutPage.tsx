@@ -132,7 +132,7 @@ export const AboutPage: React.FC = () => {
             Want to meet the specialists behind our agency?
           </h3>
           <p className="text-xs sm:text-sm text-[#526078] dark:text-[#B2BDCB]">
-            Explore our leadership and departmental roles in Discord, streaming, video, and social media.
+            Explore our specialized Networking Relations and Partner Success & Escalations divisions.
           </p>
         </div>
 

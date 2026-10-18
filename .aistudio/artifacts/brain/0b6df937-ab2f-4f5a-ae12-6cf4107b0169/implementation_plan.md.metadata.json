@@ -1,0 +1,6 @@
+{
+  "summary": "Implementation plan to add a dedicated Team Profile Photo Management suite inside the hidden password-protected /Admin portal. This enables the admin to upload and swap custom image files directly for each team member (CaptainDav, KryonAce, KryonPyper, daveee, jamiu, temple, and Partner Success specialists), storing them persistently and reflecting immediately across the site with full lightbox viewing and no copy option on Discord names.",
+  "updatedAt": "2026-10-17T17:19:54.471528017Z",
+  "requestFeedback": true,
+  "userFacing": true
+}

@@ -104,14 +104,35 @@ export interface ServiceDetail {
   }[];
 }
 
+export type TeamDepartment =
+  | 'Networking Relations Team'
+  | 'Partner Success & Escalations';
+
+export interface TeamDivision {
+  id: string;
+  name: TeamDepartment;
+  badge: string;
+  tagline: string;
+  briefDescription: string;
+  valueProposition: string;
+  coreResponsibilities: string[];
+  stats: { label: string; value: string }[];
+}
+
 export interface TeamMember {
   id: string;
-  department: string;
+  name: string;
+  discordTag: string;
+  department: TeamDepartment;
   role: string;
   initials: string;
   bio: string;
+  avatarTheme?: string;
+  avatarUrl?: string;
+  bannerGradient?: string;
+  discordRoles?: string[];
   focusAreas: string[];
-  status: 'Active Lead' | 'Profile Configurable';
+  status: 'Active Lead' | 'Profile Configurable' | 'Online Specialist';
 }
 
 export interface PortfolioItem {
