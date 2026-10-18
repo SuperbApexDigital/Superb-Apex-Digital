@@ -45,6 +45,10 @@ export const TeamPage: React.FC = () => {
   const networkingMembers = teamMembers.filter((m) => m.department === 'Networking Relations Team');
   const escalationsMembers = teamMembers.filter((m) => m.department === 'Partner Success & Escalations');
 
+  // Lightbox swipe gesture states for mobile devices
+  const [touchStartX, setTouchStartX] = useState<number | null>(null);
+  const [touchStartY, setTouchStartY] = useState<number | null>(null);
+
   // Lightbox navigation helper
   const handlePrevImage = () => {
     if (!lightboxMember) return;
@@ -60,8 +64,44 @@ export const TeamPage: React.FC = () => {
     setLightboxMember(filteredMembers[nextIndex]);
   };
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStartX(e.touches[0].clientX);
+    setTouchStartY(e.touches[0].clientY);
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX === null || touchStartY === null) return;
+    const touchEndX = e.changedTouches[0].clientX;
+    const touchEndY = e.changedTouches[0].clientY;
+    const diffX = touchEndX - touchStartX;
+    const diffY = touchEndY - touchStartY;
+
+    // Detect horizontal swipe on mobile
+    if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 40) {
+      if (diffX > 0) {
+        handlePrevImage();
+      } else {
+        handleNextImage();
+      }
+    }
+    setTouchStartX(null);
+    setTouchStartY(null);
+  };
+
+  // Keyboard navigation for accessibility and tablets
+  useEffect(() => {
+    if (!lightboxMember) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowLeft') handlePrevImage();
+      if (e.key === 'ArrowRight') handleNextImage();
+      if (e.key === 'Escape') setLightboxMember(null);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [lightboxMember, filteredMembers]);
+
   return (
-    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-16">
+    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-12 sm:space-y-16">
       {/* 1. Page Header */}
       <div className="max-w-3xl space-y-4">
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider bg-[#365DE8]/10 text-[#365DE8] dark:bg-[#6C8CFF]/15 dark:text-[#6C8CFF] border border-[#365DE8]/20 dark:border-[#6C8CFF]/30">
@@ -245,13 +285,13 @@ export const TeamPage: React.FC = () => {
             </p>
           </div>
 
-          <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-[#EEF2F8] dark:bg-[#121923] border border-[#DCE3EE] dark:border-[#283343] overflow-x-auto">
+          <div className="w-full sm:w-auto flex items-center gap-1.5 p-1.5 rounded-2xl bg-[#EEF2F8] dark:bg-[#121923] border border-[#DCE3EE] dark:border-[#283343] overflow-x-auto touch-pan-x scrollbar-none">
             <button
               type="button"
               onClick={() => setSelectedDept('All')}
-              className={`px-4 py-2 text-xs font-bold rounded-xl transition-all whitespace-nowrap ${
+              className={`shrink-0 px-3.5 sm:px-4 py-2 text-xs font-bold rounded-xl transition-all whitespace-nowrap touch-manipulation min-h-[40px] ${
                 selectedDept === 'All'
-                  ? 'bg-[#FFFFFF] dark:bg-[#1C2636] text-[#172033] dark:text-[#F5F7FA] shadow-sm'
+                  ? 'bg-[#FFFFFF] dark:bg-[#1C2636] text-[#172033] dark:text-[#F5F7FA] shadow-xs'
                   : 'text-[#526078] dark:text-[#B2BDCB] hover:text-[#172033] dark:hover:text-[#F5F7FA]'
               }`}
             >
@@ -261,9 +301,9 @@ export const TeamPage: React.FC = () => {
             <button
               type="button"
               onClick={() => setSelectedDept('Networking Relations Team')}
-              className={`px-4 py-2 text-xs font-bold rounded-xl transition-all whitespace-nowrap flex items-center gap-1.5 ${
+              className={`shrink-0 px-3.5 sm:px-4 py-2 text-xs font-bold rounded-xl transition-all whitespace-nowrap flex items-center gap-1.5 touch-manipulation min-h-[40px] ${
                 selectedDept === 'Networking Relations Team'
-                  ? 'bg-[#FFFFFF] dark:bg-[#1C2636] text-[#365DE8] dark:text-[#6C8CFF] shadow-sm'
+                  ? 'bg-[#FFFFFF] dark:bg-[#1C2636] text-[#365DE8] dark:text-[#6C8CFF] shadow-xs'
                   : 'text-[#526078] dark:text-[#B2BDCB] hover:text-[#172033] dark:hover:text-[#F5F7FA]'
               }`}
             >
@@ -274,9 +314,9 @@ export const TeamPage: React.FC = () => {
             <button
               type="button"
               onClick={() => setSelectedDept('Partner Success & Escalations')}
-              className={`px-4 py-2 text-xs font-bold rounded-xl transition-all whitespace-nowrap flex items-center gap-1.5 ${
+              className={`shrink-0 px-3.5 sm:px-4 py-2 text-xs font-bold rounded-xl transition-all whitespace-nowrap flex items-center gap-1.5 touch-manipulation min-h-[40px] ${
                 selectedDept === 'Partner Success & Escalations'
-                  ? 'bg-[#FFFFFF] dark:bg-[#1C2636] text-[#6D4AE6] dark:text-[#9B8AFB] shadow-sm'
+                  ? 'bg-[#FFFFFF] dark:bg-[#1C2636] text-[#6D4AE6] dark:text-[#9B8AFB] shadow-xs'
                   : 'text-[#526078] dark:text-[#B2BDCB] hover:text-[#172033] dark:hover:text-[#F5F7FA]'
               }`}
             >
@@ -287,37 +327,37 @@ export const TeamPage: React.FC = () => {
         </div>
 
         {/* 4. Team Member Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 sm:gap-8">
           {filteredMembers.map((member) => {
             const isNetworking = member.department === 'Networking Relations Team';
 
             return (
               <div
                 key={member.id}
-                className="group relative rounded-3xl bg-[#FFFFFF] dark:bg-[#121923] border border-[#DCE3EE] dark:border-[#283343] overflow-hidden flex flex-col justify-between shadow-sm hover:border-[#365DE8]/50 dark:hover:border-[#6C8CFF]/50 transition-all hover:shadow-xl"
+                className="group relative rounded-3xl bg-[#FFFFFF] dark:bg-[#121923] border border-[#DCE3EE] dark:border-[#283343] overflow-hidden flex flex-col justify-between shadow-xs hover:border-[#365DE8]/50 dark:hover:border-[#6C8CFF]/50 transition-all hover:shadow-xl"
               >
                 {/* Top Profile Banner */}
-                <div className={`h-24 w-full bg-gradient-to-r ${member.bannerGradient || 'from-blue-600 to-indigo-900'} relative p-4 flex items-start justify-between`}>
+                <div className={`h-20 sm:h-24 w-full bg-gradient-to-r ${member.bannerGradient || 'from-blue-600 to-indigo-900'} relative p-3 sm:p-4 flex items-start justify-between`}>
                   <div className="flex items-center gap-2">
-                    <span className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-black/40 backdrop-blur-md text-white border border-white/20">
+                    <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-black/40 backdrop-blur-md text-white border border-white/20">
                       {isNetworking ? 'Networking Relations' : 'Partner Success'}
                     </span>
                   </div>
 
-                  <div className="flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-black/40 backdrop-blur-md text-emerald-400 border border-emerald-400/30">
+                  <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] font-semibold px-2.5 py-1 rounded-full bg-black/40 backdrop-blur-md text-emerald-400 border border-emerald-400/30">
                     <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                     <span>{member.status}</span>
                   </div>
                 </div>
 
                 {/* Profile Card Body */}
-                <div className="p-7 pt-0 relative flex-1 flex flex-col justify-between space-y-6">
+                <div className="p-5 sm:p-7 pt-0 relative flex-1 flex flex-col justify-between space-y-5 sm:space-y-6">
                   {/* Avatar Section overlapping Banner */}
-                  <div className="-mt-12 flex items-end justify-between gap-4">
+                  <div className="-mt-10 sm:-mt-12 flex flex-wrap sm:flex-nowrap items-end justify-between gap-3">
                     {/* Clickable Profile Image with Lightbox preview */}
                     <div
                       onClick={() => setLightboxMember(member)}
-                      className="p-1 rounded-full bg-[#FFFFFF] dark:bg-[#121923] shadow-lg cursor-pointer"
+                      className="p-1 rounded-full bg-[#FFFFFF] dark:bg-[#121923] shadow-lg cursor-pointer touch-manipulation"
                       title={`Click to view ${member.name}'s full profile image`}
                     >
                       <DiscordAvatar
@@ -337,7 +377,7 @@ export const TeamPage: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => setLightboxMember(member)}
-                        className="text-xs font-semibold px-3 py-1.5 rounded-xl bg-[#EEF2F8] hover:bg-[#E2E8F0] dark:bg-[#1A2332] dark:hover:bg-[#253042] text-[#365DE8] dark:text-[#6C8CFF] transition-colors flex items-center gap-1.5"
+                        className="text-xs font-semibold px-3 py-1.5 rounded-xl bg-[#EEF2F8] hover:bg-[#E2E8F0] dark:bg-[#1A2332] dark:hover:bg-[#253042] text-[#365DE8] dark:text-[#6C8CFF] transition-colors flex items-center gap-1.5 touch-manipulation min-h-[36px]"
                         title="View profile image full size"
                       >
                         <Eye className="w-3.5 h-3.5" />
@@ -347,7 +387,7 @@ export const TeamPage: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => setActiveModalMember(member)}
-                        className="text-xs font-semibold px-3 py-1.5 rounded-xl bg-[#365DE8]/10 hover:bg-[#365DE8]/20 dark:bg-[#6C8CFF]/15 dark:hover:bg-[#6C8CFF]/25 text-[#365DE8] dark:text-[#6C8CFF] transition-colors flex items-center gap-1.5"
+                        className="text-xs font-semibold px-3 py-1.5 rounded-xl bg-[#365DE8]/10 hover:bg-[#365DE8]/20 dark:bg-[#6C8CFF]/15 dark:hover:bg-[#6C8CFF]/25 text-[#365DE8] dark:text-[#6C8CFF] transition-colors flex items-center gap-1.5 touch-manipulation min-h-[36px]"
                       >
                         <span>Profile Card</span>
                       </button>
@@ -565,29 +605,29 @@ export const TeamPage: React.FC = () => {
       {/* 7. Fullscreen Image Lightbox Modal for Visitors to View All Images */}
       {lightboxMember && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in"
+          className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-black/85 backdrop-blur-md animate-fade-in"
           onClick={() => setLightboxMember(null)}
         >
           <div
-            className="relative max-w-3xl w-full bg-[#111214] border border-[#2B2D31] rounded-3xl overflow-hidden shadow-2xl flex flex-col"
+            className="relative max-w-3xl w-full max-h-[94vh] bg-[#111214] border border-[#2B2D31] rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Lightbox Header */}
-            <div className="flex items-center justify-between p-4 sm:p-5 border-b border-[#2B2D31] bg-[#18191C]">
-              <div className="flex items-center gap-3">
-                <div className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse" />
-                <div>
-                  <h3 className="text-lg font-extrabold text-white flex items-center gap-2">
-                    <span>{lightboxMember.name}</span>
-                    <ShieldCheck className="w-4 h-4 text-[#5865F2]" />
+            <div className="flex items-center justify-between p-3.5 sm:p-5 border-b border-[#2B2D31] bg-[#18191C] shrink-0">
+              <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                <div className="min-w-0">
+                  <h3 className="text-base sm:text-lg font-extrabold text-white flex items-center gap-1.5 truncate">
+                    <span className="truncate">{lightboxMember.name}</span>
+                    <ShieldCheck className="w-4 h-4 text-[#5865F2] shrink-0" />
                   </h3>
-                  <div className="text-xs font-mono text-[#949BA4]">
-                    {lightboxMember.discordTag} · {lightboxMember.department}
+                  <div className="text-[11px] sm:text-xs font-mono text-[#949BA4] truncate">
+                    {lightboxMember.discordTag} · {lightboxMember.department === 'Networking Relations Team' ? 'Networking Team' : 'Partner Success'}
                   </div>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 shrink-0">
                 <button
                   type="button"
                   onClick={() => {
@@ -595,7 +635,7 @@ export const TeamPage: React.FC = () => {
                     setLightboxMember(null);
                     setActiveModalMember(currentMember);
                   }}
-                  className="px-3 py-1.5 text-xs font-semibold rounded-xl bg-[#2B2D31] hover:bg-[#35373C] text-[#DBDEE1] transition-colors"
+                  className="px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-xl bg-[#2B2D31] hover:bg-[#35373C] text-[#DBDEE1] transition-colors touch-manipulation min-h-[36px]"
                 >
                   View Details
                 </button>
@@ -603,28 +643,34 @@ export const TeamPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setLightboxMember(null)}
-                  className="w-8 h-8 rounded-full bg-[#2B2D31] hover:bg-[#35373C] text-white flex items-center justify-center transition-colors"
+                  className="w-9 h-9 sm:w-8 sm:h-8 rounded-full bg-[#2B2D31] hover:bg-[#35373C] text-white flex items-center justify-center transition-colors touch-manipulation min-h-[36px]"
                   title="Close viewer"
+                  aria-label="Close photo viewer"
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
             </div>
 
-            {/* Lightbox Image Stage with Previous/Next Controls */}
-            <div className="relative bg-[#0A0A0C] flex items-center justify-center p-6 sm:p-10 min-h-[380px]">
-              {/* Prev Button */}
+            {/* Lightbox Image Stage with Previous/Next Controls and Touch Swipe Support */}
+            <div
+              className="relative bg-[#0A0A0C] flex-1 flex flex-col items-center justify-center p-3 sm:p-8 min-h-[260px] sm:min-h-[380px] touch-pan-y"
+              onTouchStart={handleTouchStart}
+              onTouchEnd={handleTouchEnd}
+            >
+              {/* Prev Button - 44px min touch target */}
               <button
                 type="button"
                 onClick={handlePrevImage}
-                className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/60 hover:bg-black/90 text-white flex items-center justify-center transition-colors border border-white/10 z-10"
-                title="Previous Specialist"
+                className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-black/70 hover:bg-black/90 active:scale-95 text-white flex items-center justify-center transition-all border border-white/20 z-20 shadow-lg touch-manipulation"
+                title="Previous Specialist (or swipe right)"
+                aria-label="Previous Specialist"
               >
-                <ChevronLeft className="w-5 h-5" />
+                <ChevronLeft className="w-6 h-6" />
               </button>
 
               {/* Main Profile Image Display */}
-              <div className="max-w-md w-full aspect-square rounded-3xl overflow-hidden border-2 border-white/20 shadow-2xl relative bg-[#121923] flex items-center justify-center group">
+              <div className="max-w-[85vw] sm:max-w-md w-full aspect-square max-h-[48vh] sm:max-h-[55vh] rounded-2xl sm:rounded-3xl overflow-hidden border-2 border-white/20 shadow-2xl relative bg-[#121923] flex items-center justify-center group select-none">
                 {lightboxMember.avatarUrl ? (
                   <img
                     src={lightboxMember.avatarUrl}
@@ -643,31 +689,37 @@ export const TeamPage: React.FC = () => {
                 )}
 
                 {/* Name Badge Overlay */}
-                <div className="absolute bottom-4 left-4 right-4 p-3 rounded-2xl bg-black/70 backdrop-blur-md border border-white/10 text-white flex items-center justify-between">
-                  <div>
-                    <div className="text-base font-extrabold">{lightboxMember.name}</div>
-                    <div className="text-xs text-[#949BA4] font-mono">{lightboxMember.discordTag}</div>
+                <div className="absolute bottom-2.5 sm:bottom-4 left-2.5 sm:left-4 right-2.5 sm:right-4 p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-black/75 backdrop-blur-md border border-white/10 text-white flex items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <div className="text-sm sm:text-base font-extrabold truncate">{lightboxMember.name}</div>
+                    <div className="text-[11px] sm:text-xs text-[#949BA4] font-mono truncate">{lightboxMember.discordTag}</div>
                   </div>
-                  <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-[#365DE8]/30 text-[#6C8CFF] border border-[#365DE8]/40">
+                  <span className="text-[10px] sm:text-[11px] font-bold px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full bg-[#365DE8]/30 text-[#6C8CFF] border border-[#365DE8]/40 shrink-0">
                     {lightboxMember.department === 'Networking Relations Team' ? 'Networking Team' : 'Partner Success'}
                   </span>
                 </div>
               </div>
 
-              {/* Next Button */}
+              {/* Next Button - 44px min touch target */}
               <button
                 type="button"
                 onClick={handleNextImage}
-                className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/60 hover:bg-black/90 text-white flex items-center justify-center transition-colors border border-white/10 z-10"
-                title="Next Specialist"
+                className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-black/70 hover:bg-black/90 active:scale-95 text-white flex items-center justify-center transition-all border border-white/20 z-20 shadow-lg touch-manipulation"
+                title="Next Specialist (or swipe left)"
+                aria-label="Next Specialist"
               >
-                <ChevronRight className="w-5 h-5" />
+                <ChevronRight className="w-6 h-6" />
               </button>
+
+              {/* Mobile Swipe Hint */}
+              <div className="sm:hidden text-center pt-2 text-[10px] text-[#949BA4]">
+                Swipe left / right or tap arrows to navigate
+              </div>
             </div>
 
             {/* Lightbox Footer Thumbnail Strip */}
-            <div className="p-4 bg-[#141517] border-t border-[#2B2D31] overflow-x-auto">
-              <div className="flex items-center gap-3 justify-center min-w-max mx-auto">
+            <div className="py-2.5 px-3 bg-[#141517] border-t border-[#2B2D31] overflow-x-auto touch-pan-x scrollbar-none shrink-0">
+              <div className="flex items-center gap-2 justify-start sm:justify-center min-w-max mx-auto px-1">
                 {filteredMembers.map((m) => {
                   const isActive = m.id === lightboxMember.id;
                   return (
@@ -675,13 +727,13 @@ export const TeamPage: React.FC = () => {
                       key={m.id}
                       type="button"
                       onClick={() => setLightboxMember(m)}
-                      className={`relative flex items-center gap-2 p-1.5 rounded-2xl transition-all ${
+                      className={`relative flex items-center gap-1.5 p-1 rounded-xl transition-all touch-manipulation shrink-0 ${
                         isActive
-                          ? 'bg-[#365DE8]/20 border-2 border-[#365DE8]'
+                          ? 'bg-[#365DE8]/25 border-2 border-[#365DE8]'
                           : 'bg-[#1E1F22] border border-[#2B2D31] hover:border-white/30 opacity-70 hover:opacity-100'
                       }`}
                     >
-                      <div className="w-8 h-8 rounded-full overflow-hidden bg-[#121923] shrink-0">
+                      <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full overflow-hidden bg-[#121923] shrink-0">
                         {m.avatarUrl ? (
                           <img
                             src={m.avatarUrl}
@@ -695,7 +747,7 @@ export const TeamPage: React.FC = () => {
                           </div>
                         )}
                       </div>
-                      <span className="text-xs font-semibold text-white pr-2 whitespace-nowrap">
+                      <span className="text-[11px] sm:text-xs font-semibold text-white pr-1.5 whitespace-nowrap">
                         {m.name}
                       </span>
                     </button>
@@ -710,29 +762,30 @@ export const TeamPage: React.FC = () => {
       {/* 8. Discord Profile Card Modal (No Copy Option) */}
       {activeModalMember && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-fade-in"
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-md animate-fade-in"
           onClick={() => setActiveModalMember(null)}
         >
           <div
-            className="w-full max-w-md rounded-3xl bg-[#111214] text-white shadow-2xl border border-[#2B2D31] overflow-hidden"
+            className="w-full max-w-md max-h-[92vh] overflow-y-auto rounded-2xl sm:rounded-3xl bg-[#111214] text-white shadow-2xl border border-[#2B2D31] flex flex-col scrollbar-none"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Banner */}
-            <div className={`h-28 w-full bg-gradient-to-r ${activeModalMember.bannerGradient || 'from-indigo-700 to-purple-900'} relative p-3 flex justify-end`}>
+            <div className={`h-24 sm:h-28 w-full bg-gradient-to-r ${activeModalMember.bannerGradient || 'from-indigo-700 to-purple-900'} relative p-3 flex justify-end shrink-0`}>
               <button
                 type="button"
                 onClick={() => setActiveModalMember(null)}
-                className="w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center transition-colors"
+                className="w-8 h-8 rounded-full bg-black/50 hover:bg-black/70 text-white flex items-center justify-center transition-colors touch-manipulation"
+                aria-label="Close profile card"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             {/* Profile Avatar & Header */}
-            <div className="p-6 pt-0 relative">
-              <div className="-mt-14 mb-4 flex items-end justify-between">
+            <div className="p-4 sm:p-6 pt-0 relative flex-1">
+              <div className="-mt-12 sm:-mt-14 mb-4 flex items-end justify-between">
                 <div
-                  className="p-1.5 rounded-full bg-[#111214] cursor-pointer"
+                  className="p-1 rounded-full bg-[#111214] cursor-pointer touch-manipulation"
                   onClick={() => {
                     const m = activeModalMember;
                     setActiveModalMember(null);
@@ -760,7 +813,7 @@ export const TeamPage: React.FC = () => {
                       setActiveModalMember(null);
                       setLightboxMember(m);
                     }}
-                    className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-white/10 hover:bg-white/20 text-white border border-white/20 transition-colors flex items-center gap-1"
+                    className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-white/10 hover:bg-white/20 text-white border border-white/20 transition-colors flex items-center gap-1 touch-manipulation min-h-[32px]"
                   >
                     <Eye className="w-3 h-3" />
                     <span>View Image</span>
@@ -772,7 +825,7 @@ export const TeamPage: React.FC = () => {
               </div>
 
               {/* Discord Profile Card Info */}
-              <div className="rounded-2xl bg-[#1E1F22] p-5 space-y-4 border border-[#2B2D31]">
+              <div className="rounded-2xl bg-[#1E1F22] p-4 sm:p-5 space-y-4 border border-[#2B2D31]">
                 {/* Name */}
                 <div className="space-y-1">
                   <h4 className="text-xl font-extrabold text-white flex items-center gap-2">
@@ -835,7 +888,7 @@ export const TeamPage: React.FC = () => {
                 </div>
 
                 {/* Buttons (Strictly No Copy Button) */}
-                <div className="pt-2 flex items-center gap-2">
+                <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                   <button
                     type="button"
                     onClick={() => {
@@ -843,7 +896,7 @@ export const TeamPage: React.FC = () => {
                       setActiveModalMember(null);
                       setLightboxMember(m);
                     }}
-                    className="flex-1 py-2 text-xs font-bold rounded-xl bg-[#2B2D31] hover:bg-[#35373C] text-white transition-colors flex items-center justify-center gap-1.5"
+                    className="flex-1 py-2.5 px-3 text-xs font-bold rounded-xl bg-[#2B2D31] hover:bg-[#35373C] text-white transition-colors flex items-center justify-center gap-1.5 touch-manipulation min-h-[44px]"
                   >
                     <Maximize2 className="w-3.5 h-3.5" />
                     <span>View Photo</span>
@@ -855,7 +908,7 @@ export const TeamPage: React.FC = () => {
                       setActiveModalMember(null);
                       navigate('contact');
                     }}
-                    className="flex-1 py-2 text-xs font-bold rounded-xl bg-[#365DE8] hover:bg-[#2e50cb] text-white transition-colors flex items-center justify-center gap-1.5"
+                    className="flex-1 py-2.5 px-3 text-xs font-bold rounded-xl bg-[#365DE8] hover:bg-[#2e50cb] text-white transition-colors flex items-center justify-center gap-1.5 touch-manipulation min-h-[44px]"
                   >
                     <MessageSquare className="w-3.5 h-3.5" />
                     <span>Contact Specialist</span>

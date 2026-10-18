@@ -194,16 +194,29 @@ export const DiscordAvatar: React.FC<DiscordAvatarProps> = ({
     );
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if ((isClickable || onClick) && (e.key === 'Enter' || e.key === ' ')) {
+      e.preventDefault();
+      onClick?.();
+    }
+  };
+
   return (
     <div
       onClick={onClick}
-      className={`relative inline-block ${sizeMap[size]} shrink-0 select-none group ${
-        isClickable || onClick ? 'cursor-pointer hover:scale-105 active:scale-95 transition-transform' : ''
+      onKeyDown={handleKeyDown}
+      role={isClickable || onClick ? 'button' : undefined}
+      tabIndex={isClickable || onClick ? 0 : undefined}
+      className={`relative inline-block ${sizeMap[size]} shrink-0 select-none group touch-manipulation ${
+        isClickable || onClick
+          ? 'cursor-pointer hover:scale-105 active:scale-95 transition-transform focus:outline-none focus-visible:ring-2 focus-visible:ring-[#365DE8] dark:focus-visible:ring-[#6C8CFF]'
+          : ''
       }`}
       title={isClickable || onClick ? `Click to view ${name}'s full profile picture` : `${name}'s profile picture`}
+      aria-label={isClickable || onClick ? `View ${name}'s profile picture` : undefined}
     >
       {/* Outer Glow Ring */}
-      <div className="absolute -inset-1 rounded-full bg-gradient-to-tr from-[#365DE8]/40 to-[#6C8CFF]/30 blur-sm group-hover:blur-md transition-all" />
+      <div className="absolute -inset-1 rounded-full bg-gradient-to-tr from-[#365DE8]/40 to-[#6C8CFF]/30 blur-xs group-hover:blur-sm transition-all" />
 
       {/* Main Avatar Circle */}
       <div className="relative w-full h-full rounded-full overflow-hidden bg-[#121923] border-2 border-[#DCE3EE] dark:border-[#283548] shadow-md flex items-center justify-center">

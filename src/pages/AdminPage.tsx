@@ -420,12 +420,12 @@ export const AdminPage: React.FC = () => {
                   placeholder="Enter your personal password..."
                   value={passwordInput}
                   onChange={(e) => setPasswordInput(e.target.value)}
-                  className="w-full pl-3.5 pr-10 py-2.5 text-sm rounded-xl border border-[#DCE3EE] dark:border-[#283343] bg-white dark:bg-[#182230] text-[#172033] dark:text-[#F5F7FA] focus:outline-none focus:ring-2 focus:ring-[#365DE8] transition-all"
+                  className="w-full pl-3.5 pr-11 py-3 text-base sm:text-sm rounded-xl border border-[#DCE3EE] dark:border-[#283343] bg-white dark:bg-[#182230] text-[#172033] dark:text-[#F5F7FA] focus:outline-none focus:ring-2 focus:ring-[#365DE8] transition-all touch-manipulation"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#526078] dark:text-[#B2BDCB] hover:text-[#172033] dark:hover:text-white"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center text-[#526078] dark:text-[#B2BDCB] hover:text-[#172033] dark:hover:text-white touch-manipulation"
                   aria-label="Toggle password visibility"
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -435,7 +435,7 @@ export const AdminPage: React.FC = () => {
 
             <button
               type="submit"
-              className="w-full py-3 px-4 rounded-xl text-xs font-bold text-white bg-[#365DE8] hover:bg-[#2e50cb] dark:bg-[#6C8CFF] dark:text-[#0B0F14] transition-all shadow-sm flex items-center justify-center gap-2"
+              className="w-full py-3.5 px-4 rounded-xl text-sm sm:text-xs font-bold text-white bg-[#365DE8] hover:bg-[#2e50cb] dark:bg-[#6C8CFF] dark:text-[#0B0F14] transition-all shadow-sm flex items-center justify-center gap-2 touch-manipulation min-h-[46px]"
             >
               <KeyRound className="w-4 h-4" />
               <span>Unlock Admin Portal</span>
@@ -647,11 +647,12 @@ export const AdminPage: React.FC = () => {
       </div>
 
       {/* TAB NAVIGATION */}
-      <div className="flex items-center gap-2 border-b border-[#DCE3EE] dark:border-[#283343] pb-3 overflow-x-auto scrollbar-none">
+      {/* Admin Tabs */}
+      <div className="flex items-center gap-1.5 p-1.5 rounded-2xl bg-[#F7F8FC] dark:bg-[#121923] border border-[#DCE3EE] dark:border-[#283343] overflow-x-auto touch-pan-x scrollbar-none">
         <button
           type="button"
           onClick={() => setActiveTab('pending')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all ${
+          className={`shrink-0 px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all touch-manipulation min-h-[40px] whitespace-nowrap ${
             activeTab === 'pending'
               ? 'bg-[#365DE8] text-white dark:bg-[#6C8CFF] dark:text-[#0B0F14]'
               : 'text-[#526078] dark:text-[#B2BDCB] hover:bg-[#EEF2F8] dark:hover:bg-[#1C2636]'
@@ -667,7 +668,7 @@ export const AdminPage: React.FC = () => {
         <button
           type="button"
           onClick={() => setActiveTab('approved')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all ${
+          className={`shrink-0 px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all touch-manipulation min-h-[40px] whitespace-nowrap ${
             activeTab === 'approved'
               ? 'bg-[#365DE8] text-white dark:bg-[#6C8CFF] dark:text-[#0B0F14]'
               : 'text-[#526078] dark:text-[#B2BDCB] hover:bg-[#EEF2F8] dark:hover:bg-[#1C2636]'
@@ -683,7 +684,7 @@ export const AdminPage: React.FC = () => {
         <button
           type="button"
           onClick={() => setActiveTab('team_photos')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all ${
+          className={`shrink-0 px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all touch-manipulation min-h-[40px] whitespace-nowrap ${
             activeTab === 'team_photos'
               ? 'bg-[#365DE8] text-white dark:bg-[#6C8CFF] dark:text-[#0B0F14]'
               : 'text-[#526078] dark:text-[#B2BDCB] hover:bg-[#EEF2F8] dark:hover:bg-[#1C2636]'
@@ -699,7 +700,7 @@ export const AdminPage: React.FC = () => {
         <button
           type="button"
           onClick={() => setActiveTab('rejected')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all ${
+          className={`shrink-0 px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all touch-manipulation min-h-[40px] whitespace-nowrap ${
             activeTab === 'rejected'
               ? 'bg-[#365DE8] text-white dark:bg-[#6C8CFF] dark:text-[#0B0F14]'
               : 'text-[#526078] dark:text-[#B2BDCB] hover:bg-[#EEF2F8] dark:hover:bg-[#1C2636]'
@@ -715,7 +716,7 @@ export const AdminPage: React.FC = () => {
         <button
           type="button"
           onClick={() => setActiveTab('settings')}
-          className={`ml-auto px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all ${
+          className={`shrink-0 px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all touch-manipulation min-h-[40px] whitespace-nowrap sm:ml-auto ${
             activeTab === 'settings'
               ? 'bg-[#365DE8] text-white dark:bg-[#6C8CFF] dark:text-[#0B0F14]'
               : 'text-[#526078] dark:text-[#B2BDCB] hover:bg-[#EEF2F8] dark:hover:bg-[#1C2636]'
@@ -1049,11 +1050,11 @@ export const AdminPage: React.FC = () => {
             </div>
 
             {/* Division Filter Tabs */}
-            <div className="flex items-center gap-2 pt-2 border-t border-[#DCE3EE] dark:border-[#283343] overflow-x-auto scrollbar-none">
+            <div className="flex items-center gap-2 pt-2 border-t border-[#DCE3EE] dark:border-[#283343] overflow-x-auto touch-pan-x scrollbar-none">
               <button
                 type="button"
                 onClick={() => setTeamDeptFilter('All')}
-                className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                className={`shrink-0 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all touch-manipulation whitespace-nowrap min-h-[40px] ${
                   teamDeptFilter === 'All'
                     ? 'bg-[#172033] text-white dark:bg-white dark:text-[#0B0F14]'
                     : 'text-[#526078] dark:text-[#B2BDCB] hover:bg-[#EEF2F8] dark:hover:bg-[#1C2636]'
@@ -1065,7 +1066,7 @@ export const AdminPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setTeamDeptFilter('Networking Relations Team')}
-                className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                className={`shrink-0 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 touch-manipulation whitespace-nowrap min-h-[40px] ${
                   teamDeptFilter === 'Networking Relations Team'
                     ? 'bg-[#365DE8] text-white dark:bg-[#6C8CFF] dark:text-[#0B0F14]'
                     : 'text-[#526078] dark:text-[#B2BDCB] hover:bg-[#EEF2F8] dark:hover:bg-[#1C2636]'
@@ -1077,7 +1078,7 @@ export const AdminPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setTeamDeptFilter('Partner Success & Escalations')}
-                className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                className={`shrink-0 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 touch-manipulation whitespace-nowrap min-h-[40px] ${
                   teamDeptFilter === 'Partner Success & Escalations'
                     ? 'bg-[#6D4AE6] text-white dark:bg-[#9B8AFB] dark:text-[#0B0F14]'
                     : 'text-[#526078] dark:text-[#B2BDCB] hover:bg-[#EEF2F8] dark:hover:bg-[#1C2636]'
@@ -1201,11 +1202,11 @@ export const AdminPage: React.FC = () => {
                         <span>Edit Name & Details</span>
                       </button>
 
-                      {/* Hidden File Input */}
+                      {/* Hidden File Input (supports mobile camera roll and gallery) */}
                       <input
                         type="file"
                         id={`file-input-${member.id}`}
-                        accept="image/png, image/jpeg, image/jpg, image/webp"
+                        accept="image/*"
                         className="hidden"
                         onChange={(e) => {
                           const file = e.target.files?.[0];
@@ -1220,7 +1221,7 @@ export const AdminPage: React.FC = () => {
                         {/* Upload Button */}
                         <label
                           htmlFor={`file-input-${member.id}`}
-                          className={`flex-1 py-1.5 px-3 text-xs font-semibold rounded-xl flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                          className={`flex-1 py-2 px-3 text-xs font-semibold rounded-xl flex items-center justify-center gap-1.5 transition-all cursor-pointer touch-manipulation min-h-[38px] ${
                             isUploading
                               ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 cursor-not-allowed'
                               : 'bg-[#172033] hover:bg-[#222E40] text-white dark:bg-white dark:text-[#0B0F14] shadow-xs'
@@ -1648,7 +1649,7 @@ export const AdminPage: React.FC = () => {
                     <input
                       type="file"
                       id="new-member-avatar-input"
-                      accept="image/png, image/jpeg, image/jpg, image/webp"
+                      accept="image/*"
                       className="hidden"
                       onChange={async (e) => {
                         const file = e.target.files?.[0];
@@ -1664,7 +1665,7 @@ export const AdminPage: React.FC = () => {
                     />
                     <label
                       htmlFor="new-member-avatar-input"
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-[#EEF2F8] hover:bg-[#E2E8F0] dark:bg-[#182230] dark:hover:bg-[#202c3e] cursor-pointer text-[#172033] dark:text-[#F5F7FA] border border-[#DCE3EE] dark:border-[#283343]"
+                      className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-xl bg-[#EEF2F8] hover:bg-[#E2E8F0] dark:bg-[#182230] dark:hover:bg-[#202c3e] cursor-pointer text-[#172033] dark:text-[#F5F7FA] border border-[#DCE3EE] dark:border-[#283343] touch-manipulation min-h-[38px]"
                     >
                       <Upload className="w-3.5 h-3.5" />
                       <span>{newMemberAvatarUrl ? 'Change Selected Image' : 'Select Image File'}</span>
@@ -1674,18 +1675,18 @@ export const AdminPage: React.FC = () => {
               </div>
 
               {/* Form Action Buttons */}
-              <div className="pt-4 border-t border-[#DCE3EE] dark:border-[#283343] flex items-center justify-end gap-2.5">
+              <div className="pt-4 border-t border-[#DCE3EE] dark:border-[#283343] flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2.5">
                 <button
                   type="button"
                   onClick={() => setIsAddModalOpen(false)}
-                  className="px-4 py-2 text-xs font-semibold rounded-xl text-[#526078] dark:text-[#B2BDCB] hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                  className="px-4 py-2.5 text-xs font-semibold rounded-xl text-[#526078] dark:text-[#B2BDCB] hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors touch-manipulation min-h-[44px]"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isAddMemberProcessing || !newMemberName.trim()}
-                  className="px-5 py-2 text-xs font-bold rounded-xl text-white bg-[#365DE8] hover:bg-[#2e50cb] dark:bg-[#6C8CFF] dark:text-[#0B0F14] transition-all disabled:opacity-50 flex items-center gap-1.5"
+                  className="px-5 py-2.5 text-xs font-bold rounded-xl text-white bg-[#365DE8] hover:bg-[#2e50cb] dark:bg-[#6C8CFF] dark:text-[#0B0F14] transition-all disabled:opacity-50 flex items-center justify-center gap-1.5 touch-manipulation min-h-[44px]"
                 >
                   {isAddMemberProcessing ? (
                     <>
@@ -1707,8 +1708,8 @@ export const AdminPage: React.FC = () => {
 
       {/* EDIT SPECIALIST NAME & PROFILE MODAL */}
       {editingMember && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-fade-in">
-          <div className="w-full max-w-xl max-h-[90vh] overflow-y-auto rounded-3xl bg-white dark:bg-[#121923] border border-[#DCE3EE] dark:border-[#283343] p-6 sm:p-8 shadow-2xl space-y-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-xs animate-fade-in">
+          <div className="w-full max-w-xl max-h-[92vh] overflow-y-auto rounded-2xl sm:rounded-3xl bg-white dark:bg-[#121923] border border-[#DCE3EE] dark:border-[#283343] p-5 sm:p-8 shadow-2xl space-y-5 sm:space-y-6 scrollbar-none">
             <div className="flex items-center justify-between pb-3 border-b border-[#DCE3EE] dark:border-[#283343]">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full overflow-hidden shrink-0">
@@ -1846,18 +1847,18 @@ export const AdminPage: React.FC = () => {
               </div>
 
               {/* Form Buttons */}
-              <div className="pt-4 border-t border-[#DCE3EE] dark:border-[#283343] flex items-center justify-end gap-2.5">
+              <div className="pt-4 border-t border-[#DCE3EE] dark:border-[#283343] flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2.5">
                 <button
                   type="button"
                   onClick={() => setEditingMember(null)}
-                  className="px-4 py-2 text-xs font-semibold rounded-xl text-[#526078] dark:text-[#B2BDCB] hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                  className="px-4 py-2.5 text-xs font-semibold rounded-xl text-[#526078] dark:text-[#B2BDCB] hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors touch-manipulation min-h-[44px]"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={!editName.trim()}
-                  className="px-5 py-2 text-xs font-bold rounded-xl text-white bg-[#365DE8] hover:bg-[#2e50cb] dark:bg-[#6C8CFF] dark:text-[#0B0F14] transition-all disabled:opacity-50 flex items-center gap-1.5"
+                  className="px-5 py-2.5 text-xs font-bold rounded-xl text-white bg-[#365DE8] hover:bg-[#2e50cb] dark:bg-[#6C8CFF] dark:text-[#0B0F14] transition-all disabled:opacity-50 flex items-center justify-center gap-1.5 touch-manipulation min-h-[44px]"
                 >
                   <Check className="w-3.5 h-3.5" />
                   <span>Save Changes</span>
