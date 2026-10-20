@@ -24,14 +24,9 @@ if (!fs.existsSync(DATA_DIR)) {
 
 // Ensure public images are statically accessible
 const publicImagesDir = path.resolve(__dirname, 'public/images');
-const srcImagesDir = path.resolve(__dirname, 'src/assets/images');
 
 if (fs.existsSync(publicImagesDir)) {
   app.use('/images', express.static(publicImagesDir));
-  app.use('/src/assets/images', express.static(publicImagesDir));
-} else if (fs.existsSync(srcImagesDir)) {
-  app.use('/images', express.static(srcImagesDir));
-  app.use('/src/assets/images', express.static(srcImagesDir));
 }
 
 // API Routes

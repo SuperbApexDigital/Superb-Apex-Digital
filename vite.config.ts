@@ -72,35 +72,6 @@ const teamSyncPlugin = () => ({
         return res.end(JSON.stringify({ success: true }));
       }
 
-      // 4. Fallback for static image serving if requested through /src/assets/images/
-      if (url && (url.startsWith('/src/assets/images/') || url.startsWith('/images/'))) {
-        const imageName = path.basename(url);
-        const candidates = [
-          path.resolve(__dirname, 'public/images', imageName),
-          path.resolve(__dirname, 'src/assets/images', imageName),
-          path.resolve(__dirname, 'public', url.replace(/^\//, '')),
-        ];
-
-        for (const file of candidates) {
-          if (fs.existsSync(file) && fs.statSync(file).isFile()) {
-            const ext = path.extname(file).toLowerCase();
-            const contentType =
-              ext === '.jpg' || ext === '.jpeg'
-                ? 'image/jpeg'
-                : ext === '.png'
-                ? 'image/png'
-                : ext === '.webp'
-                ? 'image/webp'
-                : ext === '.svg'
-                ? 'image/svg+xml'
-                : 'application/octet-stream';
-            res.setHeader('Content-Type', contentType);
-            res.setHeader('Cache-Control', 'public, max-age=3600');
-            return fs.createReadStream(file).pipe(res);
-          }
-        }
-      }
-
       next();
     });
   },

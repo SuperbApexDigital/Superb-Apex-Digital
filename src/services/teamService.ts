@@ -84,8 +84,12 @@ export class TeamService {
           }
         },
         (error) => {
-          console.warn('Firestore onSnapshot listener fallback:', error);
-          handleFirestoreError(error, OperationType.GET, 'team_members');
+          console.warn('Firestore onSnapshot listener notice:', error);
+          try {
+            handleFirestoreError(error, OperationType.GET, 'team_members');
+          } catch (e) {
+            // Logged diagnostic error; app continues gracefully from local roster cache
+          }
         }
       );
     } catch (e) {

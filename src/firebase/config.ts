@@ -12,8 +12,8 @@ async function testConnection() {
   try {
     await getDocFromServer(doc(db, 'team_members', '__test_connection__'));
   } catch (error) {
-    if (error instanceof Error && error.message.includes('the client is offline')) {
-      console.warn('Firestore offline status or configuration notice:', error.message);
+    if (error instanceof Error) {
+      console.warn('Firestore initial connection status:', error.message);
     }
   }
 }
