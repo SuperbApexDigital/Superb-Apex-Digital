@@ -51,11 +51,11 @@ export const Footer: React.FC = () => {
             <div className="pt-2 flex flex-col gap-2 text-xs text-[#526078] dark:text-[#B2BDCB]">
               <div className="flex items-center gap-2">
                 <Shield className="w-4 h-4 text-[#365DE8] dark:text-[#6C8CFF] shrink-0" />
-                <span>100% Platform-Native Delegated Access — No Passwords Collected</span>
+                <span>100% Platform-Native Delegated Access — Zero Password Handovers</span>
               </div>
               <div className="flex items-center gap-2">
-                <GitBranch className="w-4 h-4 text-[#6D4AE6] dark:text-[#9B8AFB] shrink-0" />
-                <span>GitHub Pages & Static Web Compatible — Automated CI/CD Deployment</span>
+                <Shield className="w-4 h-4 text-[#6D4AE6] dark:text-[#9B8AFB] shrink-0" />
+                <span>Confidential Scoping & Guaranteed 24-Hour Proposal Response</span>
               </div>
             </div>
           </div>
@@ -141,7 +141,7 @@ export const Footer: React.FC = () => {
               onClick={() => navigate('privacy')}
               className="hover:text-[#172033] dark:hover:text-[#F5F7FA] transition-colors"
             >
-              Privacy Policy (Draft)
+              Privacy Policy
             </button>
             <span>·</span>
             <button
@@ -149,7 +149,7 @@ export const Footer: React.FC = () => {
               onClick={() => navigate('terms')}
               className="hover:text-[#172033] dark:hover:text-[#F5F7FA] transition-colors"
             >
-              Terms of Service (Draft)
+              Terms of Service
             </button>
             <span>·</span>
             <button
@@ -157,7 +157,7 @@ export const Footer: React.FC = () => {
               onClick={() => navigate('trust')}
               className="hover:text-[#172033] dark:hover:text-[#F5F7FA] transition-colors"
             >
-              Access Security
+              Security & Trust
             </button>
           </div>
         </div>

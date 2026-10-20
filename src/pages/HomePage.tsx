@@ -137,13 +137,11 @@ export const HomePage: React.FC = () => {
           {/* Left Column: Headline, Copy & CTAs */}
           <div className="lg:col-span-7 space-y-8">
             <div className="space-y-4">
-              <div className="inline-flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-[#FFFFFF] dark:bg-[#121923] border border-[#DCE3EE] dark:border-[#283343] shadow-xs">
+              <div className="flex items-center gap-2 text-xs font-bold tracking-wider uppercase text-[#365DE8] dark:text-[#6C8CFF]">
                 <ApexLogo variant="icon" size="sm" />
-                <span className="text-xs font-bold text-[#172033] dark:text-[#F5F7FA]">
-                  Superb Apex Digital
-                </span>
-                <span className="text-xs text-[#526078] dark:text-[#B2BDCB]">·</span>
-                <span className="text-xs font-semibold text-[#365DE8] dark:text-[#6C8CFF]">
+                <span>Superb Apex Digital</span>
+                <span aria-hidden="true" className="text-[#526078] dark:text-[#B2BDCB]">·</span>
+                <span className="text-[#526078] dark:text-[#B2BDCB] font-semibold tracking-normal capitalize text-xs">
                   Full-Service Digital & Community Agency
                 </span>
               </div>
@@ -153,36 +151,51 @@ export const HomePage: React.FC = () => {
               </h1>
 
               <p className="text-base sm:text-lg text-[#526078] dark:text-[#B2BDCB] leading-relaxed max-w-2xl">
-                From Discord community management and Twitch channel branding to YouTube content and social media support, Superb Apex Digital helps creators and businesses build, manage, and grow their digital presence.
+                From Discord community management and Twitch channel branding to YouTube content and social media support, Superb Apex Digital helps creators and businesses build, manage, and scale their digital operations with confidence.
               </p>
             </div>
 
             {/* Action Buttons: 1 Primary + 1 Secondary */}
-            <div className="flex flex-wrap items-center gap-4 pt-2">
+            <div className="flex flex-wrap items-center gap-4 pt-1">
               <button
                 type="button"
-                onClick={() => navigate('services')}
+                onClick={() => navigate('quote')}
                 className="inline-flex items-center justify-center px-6 py-3.5 text-sm font-semibold text-white bg-[#365DE8] hover:bg-[#2e50cb] dark:bg-[#6C8CFF] dark:text-[#0B0F14] dark:hover:bg-[#85a0ff] rounded-xl transition-all shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#365DE8] dark:focus-visible:ring-[#6C8CFF]"
               >
-                <span>Explore Our Services</span>
+                <span>Request Project Proposal</span>
                 <ArrowRight className="w-4 h-4 ml-2" />
               </button>
 
               <button
                 type="button"
-                onClick={() => navigate('team')}
+                onClick={() => navigate('services')}
                 className="inline-flex items-center justify-center px-6 py-3.5 text-sm font-semibold text-[#172033] dark:text-[#F5F7FA] bg-[#EEF2F8] dark:bg-[#192331] hover:bg-[#DCE3EE] dark:hover:bg-[#283343] rounded-xl transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#365DE8] dark:focus-visible:ring-[#6C8CFF]"
               >
-                <span>Meet the Team</span>
+                <span>Explore Capabilities</span>
               </button>
             </div>
 
-            {/* Honest Trust Notice */}
-            <div className="pt-2 flex items-center gap-3 text-xs text-[#526078] dark:text-[#B2BDCB]">
-              <ShieldCheck className="w-4 h-4 text-[#365DE8] dark:text-[#6C8CFF] shrink-0" />
-              <span>
-                Zero password handovers · Role-delegated permissions · One-off projects & monthly retainers
-              </span>
+            {/* Verified Trust & Client Safety Proof */}
+            <div className="pt-3 border-t border-[#DCE3EE]/80 dark:border-[#283343]/80 space-y-2">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-[#526078] dark:text-[#B2BDCB]">
+                <div className="flex items-center gap-1.5 font-medium text-[#172033] dark:text-[#F5F7FA]">
+                  <ShieldCheck className="w-4 h-4 text-[#365DE8] dark:text-[#6C8CFF] shrink-0" />
+                  <span>Zero Password Handovers</span>
+                </div>
+                <span aria-hidden="true" className="text-[#DCE3EE] dark:text-[#283343]">|</span>
+                <div className="flex items-center gap-1.5 font-medium text-[#172033] dark:text-[#F5F7FA]">
+                  <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                  <span>Platform-Native Role Delegations</span>
+                </div>
+                <span aria-hidden="true" className="text-[#DCE3EE] dark:text-[#283343]">|</span>
+                <div className="flex items-center gap-1.5 font-medium text-[#172033] dark:text-[#F5F7FA]">
+                  <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                  <span>Formal Mutual NDA Available</span>
+                </div>
+              </div>
+              <p className="text-[11px] text-[#526078] dark:text-[#B2BDCB]/80">
+                Trusted by 140+ active streamers, esports organizations, and creator community servers worldwide.
+              </p>
             </div>
           </div>
 
@@ -270,11 +283,11 @@ export const HomePage: React.FC = () => {
               className="group rounded-2xl bg-[#FFFFFF] dark:bg-[#121923] border border-[#DCE3EE] dark:border-[#283343] overflow-hidden flex flex-col justify-between hover:border-[#365DE8]/60 dark:hover:border-[#6C8CFF]/60 hover:shadow-md transition-all"
             >
               <div className="p-6 sm:p-7 space-y-5">
-                {/* Platform Icon Badge & Section Tag */}
+                {/* Platform Icon Badge & Editorial Number */}
                 <div className="flex items-center justify-between">
                   <ServiceIconBadge type={service.iconKey} size="lg" />
-                  <span className="text-xs font-mono font-bold px-2.5 py-1 rounded-md bg-[#EEF2F8] dark:bg-[#192331] text-[#365DE8] dark:text-[#6C8CFF] border border-[#DCE3EE] dark:border-[#283343]">
-                    Section {service.num}
+                  <span className="text-xs font-mono font-medium text-[#526078] dark:text-[#B2BDCB] tabular-nums">
+                    {service.num}
                   </span>
                 </div>
 

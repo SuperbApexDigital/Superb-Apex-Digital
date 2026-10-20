@@ -9,14 +9,21 @@ export const Navbar: React.FC = () => {
   const { route, navigate } = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  // Top Bar Contract: 5 core single-line links for clean, spacious desktop navigation
   const navLinks: { path: RoutePath; label: string }[] = [
     { path: 'services', label: 'Services' },
-    { path: 'team', label: 'Team' },
-    { path: 'process', label: 'Process' },
     { path: 'portfolio', label: 'Portfolio' },
+    { path: 'team', label: 'Team' },
     { path: 'pricing', label: 'Pricing' },
     { path: 'reviews', label: 'Reviews' },
-    { path: 'about', label: 'About' },
+  ];
+
+  const secondaryLinks: { path: RoutePath; label: string }[] = [
+    { path: 'about', label: 'About Agency' },
+    { path: 'process', label: 'Our Process' },
+    { path: 'trust', label: 'Trust & Security' },
+    { path: 'faq', label: 'FAQ' },
+    { path: 'contact', label: 'Contact Us' },
   ];
 
   const handleNavClick = (path: RoutePath) => {
@@ -73,8 +80,16 @@ export const Navbar: React.FC = () => {
             })}
           </nav>
 
-          {/* Zone 3: 1 primary CTA action + Theme Toggle */}
+          {/* Zone 3: Direct Contact + Primary CTA action + Theme Toggle */}
           <div className="flex items-center gap-3 shrink-0">
+            <button
+              type="button"
+              onClick={() => handleNavClick('contact')}
+              className="hidden lg:inline-flex items-center px-3 py-1.5 text-xs font-semibold text-[#526078] dark:text-[#B2BDCB] hover:text-[#172033] dark:hover:text-[#F5F7FA] transition-colors whitespace-nowrap"
+            >
+              Contact
+            </button>
+
             <ThemeToggle />
 
             <button
@@ -104,12 +119,15 @@ export const Navbar: React.FC = () => {
       {mobileMenuOpen && (
         <div className="md:hidden bg-[#FFFFFF] dark:bg-[#121923] border-b border-[#DCE3EE] dark:border-[#283343] px-4 pt-3 pb-6 shadow-xl animate-in slide-in-from-top-2">
           <div className="flex flex-col space-y-1">
+            <span className="px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-[#526078] dark:text-[#B2BDCB]">
+              Main Navigation
+            </span>
             {navLinks.map((link) => (
               <button
                 key={link.path}
                 type="button"
                 onClick={() => handleNavClick(link.path)}
-                className={`text-left px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                className={`text-left px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                   isCurrent(link.path)
                     ? 'bg-[#EEF2F8] dark:bg-[#192331] text-[#365DE8] dark:text-[#6C8CFF] font-semibold'
                     : 'text-[#526078] dark:text-[#B2BDCB] hover:bg-[#F7F8FC] dark:hover:bg-[#192331]/50'
@@ -119,23 +137,25 @@ export const Navbar: React.FC = () => {
               </button>
             ))}
 
-            {/* Quick access to Trust & FAQ on mobile */}
+            {/* Secondary agency links */}
             <div className="pt-2 border-t border-[#DCE3EE] dark:border-[#283343] mt-2 space-y-1">
-              <button
-                type="button"
-                onClick={() => handleNavClick('trust')}
-                className="flex items-center gap-2 text-left px-3 py-2 text-xs text-[#526078] dark:text-[#B2BDCB] hover:text-[#172033] dark:hover:text-[#F5F7FA]"
-              >
-                <ShieldCheck className="w-3.5 h-3.5 text-[#365DE8] dark:text-[#6C8CFF]" />
-                <span>Responsible Access & Trust</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => handleNavClick('faq')}
-                className="text-left px-3 py-2 text-xs text-[#526078] dark:text-[#B2BDCB] hover:text-[#172033] dark:hover:text-[#F5F7FA]"
-              >
-                Frequently Asked Questions
-              </button>
+              <span className="px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-[#526078] dark:text-[#B2BDCB]">
+                Agency & Trust
+              </span>
+              {secondaryLinks.map((link) => (
+                <button
+                  key={link.path}
+                  type="button"
+                  onClick={() => handleNavClick(link.path)}
+                  className={`text-left w-full px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                    isCurrent(link.path)
+                      ? 'text-[#365DE8] dark:text-[#6C8CFF] font-semibold'
+                      : 'text-[#526078] dark:text-[#B2BDCB] hover:text-[#172033] dark:hover:text-[#F5F7FA]'
+                  }`}
+                >
+                  {link.label}
+                </button>
+              ))}
             </div>
 
             {/* Theme switcher for mobile menu */}

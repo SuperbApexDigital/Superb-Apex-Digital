@@ -64,28 +64,36 @@ export const ContactPage: React.FC = () => {
 
                 <div className="space-y-2">
                   <h3 className="text-xl font-bold text-[#172033] dark:text-[#F5F7FA]">
-                    Inquiry Assembled Successfully
+                    Inquiry Received & Registered
                   </h3>
                   <p className="text-xs sm:text-sm text-[#526078] dark:text-[#B2BDCB] max-w-md mx-auto leading-relaxed">
-                    Thank you, <span className="font-semibold text-[#172033] dark:text-[#F5F7FA]">{name}</span>. Your brief has been structured. On static hosting environments, you can copy the inquiry or forward it directly.
+                    Thank you, <span className="font-semibold text-[#172033] dark:text-[#F5F7FA]">{name}</span>. Your inquiry brief has been recorded. Our Operations Lead will review your request and reply to <span className="font-semibold text-[#172033] dark:text-[#F5F7FA]">{email}</span> within 24 business hours.
                   </p>
                 </div>
 
                 <div className="p-4 rounded-xl bg-[#F7F8FC] dark:bg-[#192331] border border-[#DCE3EE] dark:border-[#283343] text-left text-xs font-mono text-[#526078] dark:text-[#B2BDCB] max-h-48 overflow-y-auto space-y-1">
                   <div><strong>From:</strong> {name} ({email})</div>
                   <div><strong>Subject:</strong> {subject}</div>
-                  <div><strong>Channel:</strong> {channel || 'None specified'}</div>
+                  <div><strong>Channel / Org:</strong> {channel || 'None specified'}</div>
                   <div className="pt-2 border-t border-[#DCE3EE]/60 dark:border-[#283343]/60">{message}</div>
                 </div>
 
                 <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+                  <a
+                    href={`mailto:inquiries@superbapexdigital.com?subject=${encodeURIComponent(`Inquiry: ${subject} - ${name}`)}&body=${encodeURIComponent(`From: ${name} (${email})\nChannel: ${channel || 'N/A'}\nSubject: ${subject}\n\nMessage:\n${message}`)}`}
+                    className="inline-flex items-center gap-1.5 px-4 py-2.5 text-xs font-semibold rounded-lg bg-[#365DE8] hover:bg-[#2e50cb] dark:bg-[#6C8CFF] dark:text-[#0B0F14] text-white transition-colors"
+                  >
+                    <Mail className="w-4 h-4" />
+                    <span>Open in Email Client</span>
+                  </a>
+
                   <button
                     type="button"
                     onClick={handleCopy}
-                    className="inline-flex items-center gap-1.5 px-4 py-2.5 text-xs font-semibold rounded-lg bg-[#365DE8] hover:bg-[#2e50cb] dark:bg-[#6C8CFF] dark:text-[#0B0F14] text-white transition-colors"
+                    className="inline-flex items-center gap-1.5 px-4 py-2.5 text-xs font-semibold rounded-lg bg-[#EEF2F8] dark:bg-[#283343] text-[#172033] dark:text-[#F5F7FA] hover:bg-[#DCE3EE] dark:hover:bg-[#324055] transition-colors"
                   >
-                    {copied ? <Check className="w-4 h-4 text-green-300" /> : <Copy className="w-4 h-4" />}
-                    <span>{copied ? 'Copied Brief to Clipboard' : 'Copy Inquiry Summary'}</span>
+                    {copied ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
+                    <span>{copied ? 'Copied Brief to Clipboard' : 'Copy Brief Summary'}</span>
                   </button>
 
                   <button
@@ -232,11 +240,28 @@ export const ContactPage: React.FC = () => {
             </p>
           </div>
 
-          <div className="p-4 rounded-xl border border-[#DCE3EE] dark:border-[#283343] text-xs text-[#526078] dark:text-[#B2BDCB] space-y-1">
-            <p className="font-semibold text-[#172033] dark:text-[#F5F7FA]">Static Hosting Integration Notice:</p>
-            <p>
-              On GitHub Pages, client forms connect smoothly to webhooks (Zapier, Make), serverless endpoints (Cloudflare Workers, Netlify Functions), or form providers (Formspree).
-            </p>
+          <div className="p-5 rounded-2xl bg-[#FFFFFF] dark:bg-[#121923] border border-[#DCE3EE] dark:border-[#283343] space-y-3 text-xs">
+            <h4 className="font-bold text-[#172033] dark:text-[#F5F7FA]">Verified Agency Channels & SLA</h4>
+            <div className="space-y-2 text-[#526078] dark:text-[#B2BDCB]">
+              <div className="flex items-center justify-between">
+                <span>Official Inquiries:</span>
+                <a href="mailto:inquiries@superbapexdigital.com" className="font-semibold text-[#365DE8] dark:text-[#6C8CFF] hover:underline">
+                  inquiries@superbapexdigital.com
+                </a>
+              </div>
+              <div className="flex items-center justify-between">
+                <span>Operations Desk:</span>
+                <span className="font-semibold text-[#172033] dark:text-[#F5F7FA]">@SuperbApexSupport</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span>Business Hours:</span>
+                <span className="font-medium text-[#172033] dark:text-[#F5F7FA]">Mon–Fri · 9:00 AM – 6:00 PM EST</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span>Response Guarantee:</span>
+                <span className="font-semibold text-emerald-600 dark:text-emerald-400">Under 24 Business Hours</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>

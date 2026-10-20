@@ -105,12 +105,14 @@ export interface ServiceDetail {
 }
 
 export type TeamDepartment =
+  | 'Client Strategy & Creator Partnerships'
+  | 'Technical Operations & Escalations'
   | 'Networking Relations Team'
   | 'Partner Success & Escalations';
 
 export interface TeamDivision {
   id: string;
-  name: TeamDepartment;
+  name: string;
   badge: string;
   tagline: string;
   briefDescription: string;
@@ -123,7 +125,7 @@ export interface TeamMember {
   id: string;
   name: string;
   discordTag: string;
-  department: TeamDepartment;
+  department: string;
   role: string;
   initials: string;
   bio: string;
@@ -134,17 +136,25 @@ export interface TeamMember {
   focusAreas: string[];
   status: 'Active Lead' | 'Profile Configurable' | 'Online Specialist';
   isCustom?: boolean;
+  staffId?: string;
+  officialEmail?: string;
+  verifiedRep?: boolean;
+  authorizedScope?: string[];
+  verificationNotes?: string;
 }
 
 export interface PortfolioItem {
   id: string;
   title: string;
   category: 'Discord' | 'Twitch' | 'YouTube' | 'Social Media' | 'Creator Branding' | 'Community';
-  badge: 'Concept Showcase' | 'Demonstration Work';
+  badge: string;
   description: string;
   deliverables: string[];
   designSystem: string;
   image?: string;
+  metrics?: string;
+  clientOrg?: string;
+  verifiedClient?: boolean;
 }
 
 export interface PricingTier {

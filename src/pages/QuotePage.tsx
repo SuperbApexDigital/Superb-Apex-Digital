@@ -489,11 +489,22 @@ Client confirmed zero password sharing agreement. Native platform delegations on
             </p>
           </div>
 
-          <div className="p-4 rounded-xl border border-[#DCE3EE] dark:border-[#283343] text-xs text-[#526078] dark:text-[#B2BDCB] space-y-1">
-            <p className="font-semibold text-[#172033] dark:text-[#F5F7FA]">Hosting & Integration Guide:</p>
-            <p>
-              On GitHub Pages, client inquiries can be connected to webhook endpoints (Zapier, Make, Slack incoming webhook) or serverless form providers (Formspree, Basin) with zero backend code required.
-            </p>
+          <div className="p-5 rounded-2xl bg-[#FFFFFF] dark:bg-[#121923] border border-[#DCE3EE] dark:border-[#283343] space-y-3 text-xs">
+            <h4 className="font-bold text-[#172033] dark:text-[#F5F7FA]">Client Protection & Standards</h4>
+            <ul className="space-y-2 text-[#526078] dark:text-[#B2BDCB]">
+              <li className="flex items-start gap-2">
+                <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
+                <span><strong>100% Asset Ownership:</strong> Full transfer of vector source files, presets, and code upon completion.</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
+                <span><strong>Zero Password Policy:</strong> Work conducted exclusively through platform-native role delegations.</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
+                <span><strong>Direct Scoping SLA:</strong> Formal proposal delivered to your email within 24 business hours.</span>
+              </li>
+            </ul>
           </div>
         </div>
       </div>
