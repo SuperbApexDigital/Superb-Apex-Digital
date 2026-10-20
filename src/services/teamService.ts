@@ -1,3 +1,6 @@
+import { collection, doc, onSnapshot, setDoc, deleteDoc, getDocs } from 'firebase/firestore';
+import { db } from '../firebase/config';
+import { handleFirestoreError, OperationType } from '../firebase/errors';
 import { TEAM_MEMBERS } from '../data/agencyData';
 import { TeamMember } from '../types';
 
@@ -18,12 +21,15 @@ function computeInitials(name: string): string {
 export class TeamService {
   private members: TeamMember[] = [];
   private isServerSyncing = false;
+  private isFirestoreSynced = false;
+  private subscribers: Set<() => void> = new Set();
 
   constructor() {
     this.loadFromStorage();
+    this.initFirestoreListener();
     this.syncWithServer();
 
-    // On mobile devices, automatically refresh roster when returning to the tab or app
+    // Automatically synchronize on mobile devices when returning to foreground
     if (typeof window !== 'undefined') {
       document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible') {
@@ -34,6 +40,90 @@ export class TeamService {
         this.syncWithServer();
       });
     }
+  }
+
+  /**
+   * Listen to real-time changes in Firestore collection `team_members`
+   * Every device (mobile, desktop, new visitors) receives updates instantaneously.
+   */
+  private initFirestoreListener(): void {
+    if (typeof window === 'undefined') return;
+
+    try {
+      const colRef = collection(db, 'team_members');
+
+      onSnapshot(
+        colRef,
+        async (snapshot) => {
+          if (snapshot.empty) {
+            // First time running against empty Firestore database: seed with baseline team members
+            await this.seedBaselineToFirestore();
+            return;
+          }
+
+          const remoteMembers: TeamMember[] = [];
+          snapshot.forEach((docSnap) => {
+            const data = docSnap.data() as TeamMember;
+            if (data && data.id && data.name) {
+              remoteMembers.push(data);
+            }
+          });
+
+          if (remoteMembers.length > 0) {
+            // Sort by orderIndex to preserve exact layout
+            remoteMembers.sort((a, b) => {
+              const orderA = typeof (a as any).orderIndex === 'number' ? (a as any).orderIndex : 999;
+              const orderB = typeof (b as any).orderIndex === 'number' ? (b as any).orderIndex : 999;
+              return orderA - orderB;
+            });
+
+            this.members = remoteMembers;
+            this.isFirestoreSynced = true;
+            this.saveToStorage(false);
+            this.notifySubscribers();
+          }
+        },
+        (error) => {
+          console.warn('Firestore onSnapshot listener fallback:', error);
+          handleFirestoreError(error, OperationType.GET, 'team_members');
+        }
+      );
+    } catch (e) {
+      console.warn('Could not initialize Firestore team listener:', e);
+    }
+  }
+
+  /**
+   * Seed baseline team members into Firestore if the cloud database is newly provisioned
+   */
+  public async seedBaselineToFirestore(): Promise<void> {
+    try {
+      for (let i = 0; i < TEAM_MEMBERS.length; i++) {
+        const m = TEAM_MEMBERS[i];
+        const memberPayload = {
+          ...m,
+          orderIndex: i,
+          updatedAt: new Date().toISOString(),
+        };
+        await setDoc(doc(db, 'team_members', m.id), memberPayload);
+      }
+      this.isFirestoreSynced = true;
+    } catch (err) {
+      console.error('Error seeding baseline team members to Firestore:', err);
+    }
+  }
+
+  private notifySubscribers(): void {
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event(STORAGE_EVENT_NAME));
+    }
+    this.subscribers.forEach((cb) => {
+      try {
+        cb();
+      } catch (err) {
+        console.error('Subscriber notification error:', err);
+      }
+    });
   }
 
   private loadFromStorage(): void {
@@ -82,39 +172,65 @@ export class TeamService {
   }
 
   /**
-   * Syncs roster with the server so all devices (mobile phones, tablets, PCs)
+   * Syncs roster with the server & Firestore so all devices (mobile phones, tablets, PCs)
    * immediately see the exact same uploaded profile images and member details.
    */
   public async syncWithServer(): Promise<boolean> {
     if (typeof window === 'undefined') return false;
     try {
       this.isServerSyncing = true;
+
+      // 1. Fetch from Firestore if needed
+      try {
+        const snapshot = await getDocs(collection(db, 'team_members'));
+        if (!snapshot.empty) {
+          const remoteMembers: TeamMember[] = [];
+          snapshot.forEach((docSnap) => {
+            const data = docSnap.data() as TeamMember;
+            if (data && data.id && data.name) {
+              remoteMembers.push(data);
+            }
+          });
+
+          remoteMembers.sort((a, b) => {
+            const orderA = typeof (a as any).orderIndex === 'number' ? (a as any).orderIndex : 999;
+            const orderB = typeof (b as any).orderIndex === 'number' ? (b as any).orderIndex : 999;
+            return orderA - orderB;
+          });
+
+          this.members = remoteMembers;
+          this.saveToStorage(false);
+          this.notifySubscribers();
+          return true;
+        }
+      } catch (err) {
+        console.warn('Firestore direct fetch attempt fallback:', err);
+      }
+
+      // 2. Fallback to local server endpoint
       const res = await fetch('/api/team', {
         headers: { 'Cache-Control': 'no-cache' },
       });
       if (res.ok) {
         const data = await res.json();
         if (data && Array.isArray(data.members) && data.members.length > 0) {
-          // If server data differs from our current state, update and notify
           const currentJson = JSON.stringify(this.members);
           const serverJson = JSON.stringify(data.members);
           if (currentJson !== serverJson) {
             this.members = data.members;
-            localStorage.setItem(STORAGE_KEY_ROSTER, serverJson);
-            window.dispatchEvent(new Event(STORAGE_EVENT_NAME));
+            this.saveToStorage(false);
+            this.notifySubscribers();
           }
           return true;
         }
       }
 
-      // If server does not have custom roster yet, push our current members to server
       if (this.members.length > 0) {
         await this.pushToServer();
         return true;
       }
       return false;
     } catch (err) {
-      // Offline fallback: rely on localStorage
       console.warn('Server sync unavailable, using local cache:', err);
       return false;
     } finally {
@@ -123,7 +239,7 @@ export class TeamService {
   }
 
   /**
-   * Push current roster (including all newly uploaded photos) to server so mobile devices receive them
+   * Push current roster to server backup
    */
   public async pushToServer(): Promise<boolean> {
     if (typeof window === 'undefined') return false;
@@ -137,24 +253,43 @@ export class TeamService {
       });
       return res.ok;
     } catch (err) {
-      console.warn('Failed to push team roster to server', err);
+      console.warn('Failed to push team roster to server backup', err);
       return false;
     }
   }
 
   /**
-   * Force push current roster to cloud to make sure mobile devices immediately receive all photos
+   * Force push current roster to Cloud Firestore and server
+   * Guarantees mobile devices and all new visitors immediately receive all profile photos & edits.
    */
   public async forcePushToCloud(): Promise<boolean> {
     this.saveToStorage(false);
-    return await this.pushToServer();
+    let firestoreSuccess = true;
+
+    try {
+      for (let i = 0; i < this.members.length; i++) {
+        const m = this.members[i];
+        const payload = {
+          ...m,
+          orderIndex: i,
+          updatedAt: new Date().toISOString(),
+        };
+        await setDoc(doc(db, 'team_members', m.id), payload, { merge: true });
+      }
+    } catch (err) {
+      console.error('Firestore cloud force push warning:', err);
+      firestoreSuccess = false;
+    }
+
+    const serverOk = await this.pushToServer();
+    return firestoreSuccess || serverOk;
   }
 
   private saveToStorage(push = true): void {
     if (typeof window === 'undefined') return;
     try {
       localStorage.setItem(STORAGE_KEY_ROSTER, JSON.stringify(this.members));
-      window.dispatchEvent(new Event(STORAGE_EVENT_NAME));
+      this.notifySubscribers();
       if (push) {
         this.pushToServer().catch(() => {});
       }
@@ -178,7 +313,7 @@ export class TeamService {
   }
 
   /**
-   * Check if a member has a custom uploaded avatar (data URL or non-default)
+   * Check if a member has a custom uploaded avatar
    */
   public hasCustomAvatar(id: string): boolean {
     const member = this.getMemberById(id);
@@ -189,14 +324,14 @@ export class TeamService {
   }
 
   /**
-   * Add a new person to a team
+   * Add a new person to a team and sync to Firestore and local storage
    */
-  public addMember(memberData: Omit<TeamMember, 'id' | 'initials'> & { initials?: string }): TeamMember {
+  public async addMember(memberData: Omit<TeamMember, 'id' | 'initials'> & { initials?: string }): Promise<TeamMember> {
     const prefix = memberData.department === 'Networking Relations Team' ? 'nrt-custom' : 'pse-custom';
     const newId = `${prefix}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
     const initials = memberData.initials || computeInitials(memberData.name);
 
-    const newMember: TeamMember = {
+    const newMember: TeamMember & { orderIndex: number; updatedAt: string } = {
       ...memberData,
       id: newId,
       initials,
@@ -213,17 +348,27 @@ export class TeamService {
         ? memberData.focusAreas
         : ['Client Solutions', 'Direct Outreach', 'Dedicated Support'],
       status: memberData.status || 'Active Lead',
+      orderIndex: this.members.length,
+      updatedAt: new Date().toISOString(),
     };
 
     this.members.push(newMember);
-    this.saveToStorage();
+    this.saveToStorage(true);
+
+    try {
+      await setDoc(doc(db, 'team_members', newMember.id), newMember);
+    } catch (err) {
+      console.warn('Firestore setDoc notice on addMember:', err);
+      handleFirestoreError(err, OperationType.CREATE, `team_members/${newMember.id}`);
+    }
+
     return newMember;
   }
 
   /**
-   * Edit/update any existing team member's details (name, role, discord tag, bio, etc.)
+   * Edit/update any existing team member's details
    */
-  public updateMember(id: string, updates: Partial<TeamMember>): boolean {
+  public async updateMember(id: string, updates: Partial<TeamMember>): Promise<boolean> {
     const index = this.members.findIndex((m) => m.id === id);
     if (index === -1) return false;
 
@@ -231,28 +376,37 @@ export class TeamService {
     const newName = updates.name !== undefined ? updates.name.trim() : current.name;
     const newInitials = updates.name !== undefined ? computeInitials(newName) : (updates.initials || current.initials);
 
-    this.members[index] = {
+    const updatedDoc = {
       ...current,
       ...updates,
       name: newName,
       initials: newInitials,
+      updatedAt: new Date().toISOString(),
     };
 
-    this.saveToStorage();
-    return true;
+    this.members[index] = updatedDoc;
+    this.saveToStorage(true);
+
+    try {
+      await setDoc(doc(db, 'team_members', id), updatedDoc, { merge: true });
+      return true;
+    } catch (err) {
+      console.warn('Firestore setDoc notice on updateMember:', err);
+      handleFirestoreError(err, OperationType.UPDATE, `team_members/${id}`);
+    }
   }
 
   /**
    * Update specifically the name of an existing team member
    */
-  public updateMemberName(id: string, newName: string): boolean {
+  public async updateMemberName(id: string, newName: string): Promise<boolean> {
     return this.updateMember(id, { name: newName });
   }
 
   /**
    * Update or upload a custom avatar data URL for a specialist
    */
-  public updateMemberAvatar(memberId: string, avatarDataUrl: string): boolean {
+  public async updateMemberAvatar(memberId: string, avatarDataUrl: string): Promise<boolean> {
     const index = this.members.findIndex((m) => m.id === memberId);
     if (index === -1) return false;
 
@@ -261,72 +415,117 @@ export class TeamService {
       avatarUrl: avatarDataUrl,
     };
 
-    this.saveToStorage();
-    return true;
+    this.saveToStorage(true);
+
+    try {
+      await setDoc(
+        doc(db, 'team_members', memberId),
+        {
+          avatarUrl: avatarDataUrl,
+          updatedAt: new Date().toISOString(),
+        },
+        { merge: true }
+      );
+      return true;
+    } catch (err) {
+      console.warn('Firestore setDoc notice on updateMemberAvatar:', err);
+      handleFirestoreError(err, OperationType.UPDATE, `team_members/${memberId}`);
+    }
   }
 
   /**
    * Remove custom avatar and revert to factory default image
    */
-  public removeMemberAvatar(memberId: string): boolean {
+  public async removeMemberAvatar(memberId: string): Promise<boolean> {
     const index = this.members.findIndex((m) => m.id === memberId);
     if (index === -1) return false;
 
     const original = TEAM_MEMBERS.find((m) => m.id === memberId);
+    const targetUrl = original ? original.avatarUrl : '';
+
     this.members[index] = {
       ...this.members[index],
-      avatarUrl: original ? original.avatarUrl : undefined,
+      avatarUrl: targetUrl,
     };
 
-    this.saveToStorage();
-    return true;
+    this.saveToStorage(true);
+
+    try {
+      await setDoc(
+        doc(db, 'team_members', memberId),
+        {
+          avatarUrl: targetUrl,
+          updatedAt: new Date().toISOString(),
+        },
+        { merge: true }
+      );
+      return true;
+    } catch (err) {
+      console.warn('Firestore setDoc notice on removeMemberAvatar:', err);
+      handleFirestoreError(err, OperationType.UPDATE, `team_members/${memberId}`);
+    }
   }
 
   /**
    * Delete a team member
    */
-  public deleteMember(id: string): boolean {
+  public async deleteMember(id: string): Promise<boolean> {
     const index = this.members.findIndex((m) => m.id === id);
     if (index === -1) return false;
     this.members.splice(index, 1);
-    this.saveToStorage();
-    return true;
-  }
+    this.saveToStorage(true);
 
-  /**
-   * Reset all team members back to initial default roster
-   */
-  public resetAllToDefault(): void {
-    this.members = TEAM_MEMBERS.map((m) => ({ ...m }));
-    this.saveToStorage();
-    if (typeof window !== 'undefined') {
-      fetch('/api/team/reset', { method: 'POST' }).catch(() => {});
+    try {
+      await deleteDoc(doc(db, 'team_members', id));
+      return true;
+    } catch (err) {
+      console.warn('Firestore deleteDoc notice on deleteMember:', err);
+      handleFirestoreError(err, OperationType.DELETE, `team_members/${id}`);
     }
   }
 
   /**
-   * Reset all avatars only (legacy compatibility)
+   * Reset all team members back to initial default roster in Firestore and local storage
    */
-  public resetAllAvatars(): void {
-    this.resetAllToDefault();
+  public async resetAllToDefault(): Promise<void> {
+    this.members = TEAM_MEMBERS.map((m, idx) => ({ ...m, orderIndex: idx }));
+    this.saveToStorage(true);
+
+    try {
+      await this.seedBaselineToFirestore();
+      if (typeof window !== 'undefined') {
+        fetch('/api/team/reset', { method: 'POST' }).catch(() => {});
+      }
+    } catch (err) {
+      console.error('Error resetting roster in Firestore:', err);
+    }
+  }
+
+  public async resetAllAvatars(): Promise<void> {
+    await this.resetAllToDefault();
   }
 
   /**
-   * Subscribe to updates (for reactive re-rendering across components)
+   * Subscribe to updates (reactive re-rendering across components)
    */
   public subscribe(callback: () => void): () => void {
-    if (typeof window === 'undefined') return () => {};
-    window.addEventListener(STORAGE_EVENT_NAME, callback);
+    this.subscribers.add(callback);
+    if (typeof window !== 'undefined') {
+      window.addEventListener(STORAGE_EVENT_NAME, callback);
+    }
     return () => {
-      window.removeEventListener(STORAGE_EVENT_NAME, callback);
+      this.subscribers.delete(callback);
+      if (typeof window !== 'undefined') {
+        window.removeEventListener(STORAGE_EVENT_NAME, callback);
+      }
     };
   }
 
   /**
    * Helper utility to compress an image file client-side using Canvas
-   * Max dimension 420x420 to keep fast, lightweight, and crystal-clear on mobile & retina screens.
+   * Max dimension 380x380 to keep ultra-fast, lightweight, and sharp on mobile & retina screens.
    */
-  public static async compressImageFile(file: File, maxDim = 420, quality = 0.85): Promise<string> {
+  public static async compressImageFile(file: File, maxDim = 380, quality = 0.82): Promise<string> {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = (e) => {

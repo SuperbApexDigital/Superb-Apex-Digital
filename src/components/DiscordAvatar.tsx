@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { resolveAvatarUrl } from '../utils/imageUrl';
 
 interface DiscordAvatarProps {
   name: string;
@@ -23,12 +24,26 @@ export const DiscordAvatar: React.FC<DiscordAvatarProps> = ({
   onClick,
   isClickable = false,
 }) => {
+  const [resolvedSrc, setResolvedSrc] = useState<string | undefined>(() => resolveAvatarUrl(avatarUrl));
   const [imgError, setImgError] = useState(false);
 
   // When avatarUrl updates (e.g. via cloud sync on mobile), immediately reset error state
   useEffect(() => {
+    setResolvedSrc(resolveAvatarUrl(avatarUrl));
     setImgError(false);
   }, [avatarUrl]);
+
+  const handleImgError = () => {
+    // If the path was pointing to /images/... and failed, attempt /src/assets/images/... or vice versa
+    if (resolvedSrc && !resolvedSrc.startsWith('data:') && resolvedSrc.includes('/images/')) {
+      const filename = resolvedSrc.split('/').pop();
+      if (filename && !resolvedSrc.includes('/src/assets/images/')) {
+        setResolvedSrc(`/src/assets/images/${filename}`);
+        return;
+      }
+    }
+    setImgError(true);
+  };
 
   const sizeMap = {
     sm: 'w-10 h-10 text-xs',
@@ -225,14 +240,14 @@ export const DiscordAvatar: React.FC<DiscordAvatarProps> = ({
 
       {/* Main Avatar Circle */}
       <div className="relative w-full h-full rounded-full overflow-hidden bg-[#121923] border-2 border-[#DCE3EE] dark:border-[#283548] shadow-md flex items-center justify-center">
-        {avatarUrl && !imgError ? (
+        {resolvedSrc && !imgError ? (
           <img
-            src={avatarUrl}
+            src={resolvedSrc}
             alt={`${name} profile avatar`}
             loading="eager"
             decoding="async"
             referrerPolicy="no-referrer"
-            onError={() => setImgError(true)}
+            onError={handleImgError}
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
           />
         ) : (

@@ -1,0 +1,51 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global Safety Net: Default-deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidTeamMember(data, memberId) {
+      return data.id is string && data.id == memberId && isValidId(data.id)
+        && data.name is string && data.name.size() > 0 && data.name.size() <= 100
+        && data.role is string && data.role.size() > 0 && data.role.size() <= 100
+        && data.department is string && data.department.size() > 0 && data.department.size() <= 100
+        && (!('bio' in data) || (data.bio is string && data.bio.size() <= 2000))
+        && (!('discordTag' in data) || (data.discordTag is string && data.discordTag.size() <= 100))
+        && (!('initials' in data) || (data.initials is string && data.initials.size() <= 10))
+        && (!('avatarUrl' in data) || (data.avatarUrl is string && data.avatarUrl.size() <= 1000000))
+        && (!('avatarTheme' in data) || (data.avatarTheme is string && data.avatarTheme.size() <= 50))
+        && (!('bannerGradient' in data) || (data.bannerGradient is string && data.bannerGradient.size() <= 150))
+        && (!('status' in data) || (data.status is string && data.status.size() <= 100))
+        && (!('isCustom' in data) || data.isCustom is bool)
+        && (!('orderIndex' in data) || data.orderIndex is number)
+        && (!('updatedAt' in data) || (data.updatedAt is string && data.updatedAt.size() <= 60))
+        && (!('focusAreas' in data) || (data.focusAreas is list && data.focusAreas.size() <= 20))
+        && (!('discordRoles' in data) || (data.discordRoles is list && data.discordRoles.size() <= 20));
+    }
+
+    // Agency Team Members collection: globally readable by all visitors & devices
+    match /team_members/{memberId} {
+      allow get, list: if true;
+      allow create: if isValidId(memberId) && isValidTeamMember(incoming(), memberId);
+      allow update: if isValidId(memberId) && isValidTeamMember(incoming(), memberId);
+      allow delete: if isValidId(memberId);
+    }
+  }
+}

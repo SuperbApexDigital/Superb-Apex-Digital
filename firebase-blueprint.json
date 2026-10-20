@@ -1,0 +1,82 @@
+{
+  "entities": {
+    "TeamMember": {
+      "title": "TeamMember",
+      "description": "Represents a team member profile in Superb Apex Digital roster",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the team member"
+        },
+        "name": {
+          "type": "string",
+          "description": "Full name of the team member"
+        },
+        "discordTag": {
+          "type": "string",
+          "description": "Discord tag or handle"
+        },
+        "department": {
+          "type": "string",
+          "description": "Department name"
+        },
+        "role": {
+          "type": "string",
+          "description": "Role/title"
+        },
+        "initials": {
+          "type": "string",
+          "description": "Initials for avatar placeholder"
+        },
+        "bio": {
+          "type": "string",
+          "description": "Short biography"
+        },
+        "avatarTheme": {
+          "type": "string",
+          "description": "Discord avatar theme name"
+        },
+        "avatarUrl": {
+          "type": "string",
+          "description": "Avatar image URL or Base64 data URL"
+        },
+        "bannerGradient": {
+          "type": "string",
+          "description": "Banner background gradient"
+        },
+        "discordRoles": {
+          "type": "array",
+          "description": "Discord roles and badges"
+        },
+        "focusAreas": {
+          "type": "array",
+          "description": "Specialized skill and focus areas"
+        },
+        "status": {
+          "type": "string",
+          "description": "Availability status"
+        },
+        "isCustom": {
+          "type": "boolean",
+          "description": "Whether created by admin"
+        },
+        "orderIndex": {
+          "type": "number",
+          "description": "Display order in team roster"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "ISO timestamp of last update"
+        }
+      },
+      "required": ["id", "name", "role", "department"]
+    }
+  },
+  "firestore": {
+    "/team_members/{memberId}": {
+      "schema": "#/entities/TeamMember",
+      "description": "Public collection of agency team members synced across all visitor devices and admin"
+    }
+  }
+}

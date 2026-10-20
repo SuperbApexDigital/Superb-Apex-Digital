@@ -111,7 +111,7 @@ export const AdminPage: React.FC = () => {
       ? editDiscordTag.trim()
       : `@${editDiscordTag.trim()}`;
 
-    teamService.updateMember(editingMember.id, {
+    await teamService.updateMember(editingMember.id, {
       name: editName.trim(),
       department: editDept,
       discordTag: formattedTag,
@@ -124,7 +124,6 @@ export const AdminPage: React.FC = () => {
       avatarUrl: editAvatarUrl || editingMember.avatarUrl,
     });
 
-    await teamService.pushToServer();
     setTeamMembers(teamService.getTeamMembers());
     setEditingMember(null);
     showNotice(`Updated ${editName.trim()}'s profile and name! Synced across all mobile devices.`);
@@ -160,7 +159,7 @@ export const AdminPage: React.FC = () => {
         ? newMemberFocusAreas.split(',').map((s) => s.trim()).filter(Boolean)
         : ['Client Solutions', 'Direct Outreach', 'Dedicated Support'];
 
-      const added = teamService.addMember({
+      const added = await teamService.addMember({
         name: newMemberName.trim(),
         department: newMemberDept,
         discordTag: formattedTag,
@@ -182,17 +181,17 @@ export const AdminPage: React.FC = () => {
       setNewMemberFocusAreas('');
       setNewMemberAvatarUrl('');
 
-      showNotice(`Successfully added ${added.name} to ${added.department}!`);
+      showNotice(`Successfully added ${added.name} to ${added.department}! Synced to all visitors.`);
     } finally {
       setIsAddMemberProcessing(false);
     }
   };
 
-  const handleDeleteMember = (member: TeamMember) => {
+  const handleDeleteMember = async (member: TeamMember) => {
     if (window.confirm(`Are you sure you want to remove ${member.name} from the ${member.department}?`)) {
-      teamService.deleteMember(member.id);
+      await teamService.deleteMember(member.id);
       setTeamMembers(teamService.getTeamMembers());
-      showNotice(`Removed ${member.name} from the roster.`);
+      showNotice(`Removed ${member.name} from the roster across all devices.`);
     }
   };
 
@@ -227,9 +226,8 @@ export const AdminPage: React.FC = () => {
     if (!file) return;
     try {
       setUploadingMemberId(memberId);
-      const compressedDataUrl = await TeamService.compressImageFile(file, 500, 0.9);
-      teamService.updateMemberAvatar(memberId, compressedDataUrl);
-      await teamService.pushToServer();
+      const compressedDataUrl = await TeamService.compressImageFile(file, 400, 0.85);
+      await teamService.updateMemberAvatar(memberId, compressedDataUrl);
       setTeamMembers(teamService.getTeamMembers());
       const m = teamMembers.find((item) => item.id === memberId);
       showNotice(`Custom profile photo uploaded for ${m?.name || 'specialist'}! Live across mobile & web.`);
@@ -243,16 +241,14 @@ export const AdminPage: React.FC = () => {
 
   const handleRevertPhoto = async (memberId: string) => {
     const m = teamMembers.find((item) => item.id === memberId);
-    teamService.removeMemberAvatar(memberId);
-    await teamService.pushToServer();
+    await teamService.removeMemberAvatar(memberId);
     setTeamMembers(teamService.getTeamMembers());
     showNotice(`Reverted ${m?.name || 'specialist'} photo to default asset.`);
   };
 
   const handleResetAllTeamPhotos = async () => {
     if (window.confirm('Are you sure you want to revert all team photos and rosters back to their original default state?')) {
-      teamService.resetAllToDefault();
-      await teamService.pushToServer();
+      await teamService.resetAllToDefault();
       setTeamMembers(teamService.getTeamMembers());
       showNotice('All team members and avatars have been reset to default on all devices.');
     }
@@ -1737,13 +1733,39 @@ export const AdminPage: React.FC = () => {
           <div className="w-full max-w-xl max-h-[92vh] overflow-y-auto rounded-2xl sm:rounded-3xl bg-white dark:bg-[#121923] border border-[#DCE3EE] dark:border-[#283343] p-5 sm:p-8 shadow-2xl space-y-5 sm:space-y-6 scrollbar-none">
             <div className="flex items-center justify-between pb-3 border-b border-[#DCE3EE] dark:border-[#283343]">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full overflow-hidden shrink-0">
-                  <DiscordAvatar
-                    name={editName || editingMember.name}
-                    initials={editingMember.initials}
-                    avatarUrl={editingMember.avatarUrl}
-                    size="md"
-                    showStatus={false}
+                <div className="relative group shrink-0">
+                  <div className="w-12 h-12 rounded-full overflow-hidden">
+                    <DiscordAvatar
+                      name={editName || editingMember.name}
+                      initials={editingMember.initials}
+                      avatarUrl={editAvatarUrl || editingMember.avatarUrl}
+                      size="md"
+                      showStatus={false}
+                    />
+                  </div>
+                  <label
+                    htmlFor="edit-member-photo-input"
+                    className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 rounded-full flex items-center justify-center cursor-pointer transition-opacity"
+                    title="Upload new photo"
+                  >
+                    <Camera className="w-4 h-4 text-white" />
+                  </label>
+                  <input
+                    id="edit-member-photo-input"
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        try {
+                          const compressed = await TeamService.compressImageFile(file, 400, 0.85);
+                          setEditAvatarUrl(compressed);
+                        } catch {
+                          showNotice('Could not process image file.');
+                        }
+                      }
+                    }}
                   />
                 </div>
                 <div>
@@ -1751,7 +1773,7 @@ export const AdminPage: React.FC = () => {
                     <span>Edit Specialist Profile</span>
                   </h3>
                   <p className="text-xs text-[#526078] dark:text-[#8A99AD]">
-                    Edit the name and details for {editingMember.name}.
+                    Edit name, photo, and details for {editingMember.name}. Tap avatar to replace photo.
                   </p>
                 </div>
               </div>

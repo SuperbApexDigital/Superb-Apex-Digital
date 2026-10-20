@@ -21,6 +21,7 @@ import {
   Eye,
 } from 'lucide-react';
 import { TeamDepartment, TeamMember } from '../types';
+import { resolveAvatarUrl } from '../utils/imageUrl';
 
 export const TeamPage: React.FC = () => {
   const { navigate } = useRouter();
@@ -681,7 +682,7 @@ export const TeamPage: React.FC = () => {
               <div className="max-w-[85vw] sm:max-w-md w-full aspect-square max-h-[48vh] sm:max-h-[55vh] rounded-2xl sm:rounded-3xl overflow-hidden border-2 border-white/20 shadow-2xl relative bg-[#121923] flex items-center justify-center group select-none">
                 {lightboxMember.avatarUrl && !lightboxImgError ? (
                   <img
-                    src={lightboxMember.avatarUrl}
+                    src={resolveAvatarUrl(lightboxMember.avatarUrl)}
                     alt={`${lightboxMember.name} profile image`}
                     loading="eager"
                     decoding="async"
@@ -747,7 +748,7 @@ export const TeamPage: React.FC = () => {
                       <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full overflow-hidden bg-[#121923] shrink-0">
                         {m.avatarUrl ? (
                           <img
-                            src={m.avatarUrl}
+                            src={resolveAvatarUrl(m.avatarUrl)}
                             alt={m.name}
                             referrerPolicy="no-referrer"
                             className="w-full h-full object-cover"
