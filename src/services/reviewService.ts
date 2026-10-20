@@ -1,5 +1,8 @@
 import { Review, ReviewFormData, ReviewStatus } from '../types';
 import { computeAdminHash, DEFAULT_ADMIN_HASH } from '../utils/crypto';
+import { collection, doc, onSnapshot, setDoc, deleteDoc, getDocs } from 'firebase/firestore';
+import { db } from '../firebase/config';
+import { handleFirestoreError, OperationType } from '../firebase/errors';
 
 const REVIEWS_STORAGE_KEY = 'sad_client_reviews_v1';
 const ADMIN_HASH_STORAGE_KEY = 'sad_admin_pwd_hash_v2';
@@ -99,34 +102,40 @@ export const INITIAL_SEEDED_REVIEWS: Review[] = [
       'They created my full branding kit: primary & secondary logos, typography guides, hex color tokens, and a commercial media kit. Two weeks after deploying the kit, I signed my first five-figure annual brand partnership. Worth every single penny.',
     createdAt: '2026-10-09T20:00:00Z',
     status: 'approved',
-    featured: false,
+    featured: true,
     verifiedClient: true,
+    adminReply: {
+      message:
+        'Thrilled to see your creator brand partnership success Aria! The entire team is cheering you on.',
+      repliedAt: '2026-10-10T10:15:00Z',
+      author: 'Superb Apex Team',
+    },
   },
   {
     id: 'rev-06',
-    clientName: 'Samira Patel',
-    clientRole: 'Founder, Nova Creative Collective',
+    clientName: 'Kaelen Miller',
+    clientRole: 'Lead Moderator, E-Sports League Hub (18k Members)',
     avatarBgColor: '#06B6D4',
-    serviceCategory: 'Social Media Services',
+    serviceCategory: 'Discord Services',
     rating: 5,
-    title: 'Top-tier Figma templates and viral TikTok cutdowns',
+    title: 'Custom ticket automation cut response times by 65%',
     comment:
-      'Exceptional creative direction and multi-platform templates. We received customizable design files for Instagram, X, and YouTube Shorts that stay true to our brand guidelines. Fast communication and genuine professionalism.',
-    createdAt: '2026-10-11T13:45:00Z',
+      'We had massive ticket queue backlogs during tournament registrations. Superb Apex Digital designed automated intake routing and staff notification webhooks that resolved our chaos overnight.',
+    createdAt: '2026-10-12T17:40:00Z',
     status: 'approved',
     featured: false,
     verifiedClient: true,
   },
   {
-    id: 'rev-sample-pending',
-    clientName: 'Tyler Henderson',
-    clientRole: 'Community Lead, Rift Esports League',
+    id: 'rev-07',
+    clientName: 'Soren Ward',
+    clientRole: 'Community Lead, PixelCraft Network',
     avatarBgColor: '#6366F1',
     serviceCategory: 'Discord Services',
     rating: 5,
-    title: 'Incredible onboarding and bot configuration for tournament',
+    title: 'Comprehensive raid shielding and bot integration',
     comment:
-      'Superb Apex Digital helped us set up automated tournament registration channels and player verification bots. Fast response time and stellar documentation for our volunteer mods.',
+      'Security audit was thorough and effective. Fixed bot permission vulnerabilities before our major community game launch.',
     createdAt: '2026-10-14T08:30:00Z',
     status: 'pending',
     featured: false,
@@ -135,12 +144,72 @@ export const INITIAL_SEEDED_REVIEWS: Review[] = [
 ];
 
 class ReviewService {
+  private reviews: Review[] = [];
+  private isFirestoreListening = false;
+
+  constructor() {
+    this.reviews = this.getStorage();
+    this.initFirestoreListener();
+  }
+
+  private initFirestoreListener(): void {
+    if (typeof window === 'undefined') return;
+
+    try {
+      const colRef = collection(db, 'reviews');
+      onSnapshot(
+        colRef,
+        async (snapshot) => {
+          if (snapshot.empty) {
+            await this.seedBaselineToFirestore();
+            return;
+          }
+
+          const remoteReviews: Review[] = [];
+          snapshot.forEach((docSnap) => {
+            const data = docSnap.data() as Review;
+            if (data && data.id && data.clientName) {
+              remoteReviews.push(data);
+            }
+          });
+
+          if (remoteReviews.length > 0) {
+            remoteReviews.sort(
+              (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+            );
+            this.reviews = remoteReviews;
+            this.saveStorage(this.reviews, false);
+          }
+        },
+        (error) => {
+          console.warn('Firestore reviews snapshot notice:', error);
+          try {
+            handleFirestoreError(error, OperationType.GET, 'reviews');
+          } catch {
+            // App gracefully falls back to local cache
+          }
+        }
+      );
+    } catch (err) {
+      console.warn('Could not initialize reviews Firestore listener:', err);
+    }
+  }
+
+  private async seedBaselineToFirestore(): Promise<void> {
+    try {
+      for (const rev of INITIAL_SEEDED_REVIEWS) {
+        await setDoc(doc(db, 'reviews', rev.id), rev);
+      }
+    } catch (err) {
+      console.error('Error seeding baseline reviews to Firestore:', err);
+    }
+  }
+
   private getStorage(): Review[] {
     if (typeof window === 'undefined') return INITIAL_SEEDED_REVIEWS;
     try {
       const stored = localStorage.getItem(REVIEWS_STORAGE_KEY);
       if (!stored) {
-        // Seed initial data
         localStorage.setItem(REVIEWS_STORAGE_KEY, JSON.stringify(INITIAL_SEEDED_REVIEWS));
         return INITIAL_SEEDED_REVIEWS;
       }
@@ -151,11 +220,11 @@ class ReviewService {
     }
   }
 
-  private saveStorage(reviews: Review[]): void {
+  private saveStorage(reviews: Review[], pushToCloud = true): void {
     if (typeof window === 'undefined') return;
     try {
+      this.reviews = reviews;
       localStorage.setItem(REVIEWS_STORAGE_KEY, JSON.stringify(reviews));
-      // Notify active tabs or components
       window.dispatchEvent(new CustomEvent('sad_reviews_updated', { detail: { reviews } }));
     } catch (err) {
       console.error('Error saving reviews to localStorage:', err);
@@ -164,15 +233,15 @@ class ReviewService {
 
   // Get all reviews
   public getAllReviews(): Review[] {
-    return this.getStorage();
+    return this.reviews.length > 0 ? this.reviews : this.getStorage();
   }
 
   // Get approved reviews only (for public display)
   public getApprovedReviews(): Review[] {
-    return this.getStorage()
+    const list = this.getAllReviews();
+    return list
       .filter((r) => r.status === 'approved')
       .sort((a, b) => {
-        // Featured reviews come first, then most recent
         if (a.featured && !b.featured) return -1;
         if (!a.featured && b.featured) return 1;
         return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
@@ -181,14 +250,15 @@ class ReviewService {
 
   // Get pending reviews for moderation
   public getPendingReviews(): Review[] {
-    return this.getStorage()
+    const list = this.getAllReviews();
+    return list
       .filter((r) => r.status === 'pending')
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }
 
   // Get review statistics
   public getStats() {
-    const all = this.getStorage();
+    const all = this.getAllReviews();
     const approved = all.filter((r) => r.status === 'approved');
     const pending = all.filter((r) => r.status === 'pending');
     const rejected = all.filter((r) => r.status === 'rejected');
@@ -215,7 +285,7 @@ class ReviewService {
 
   // Submit client review (Client facing - starts as 'pending')
   public submitReview(formData: ReviewFormData): Review {
-    const reviews = this.getStorage();
+    const reviews = this.getAllReviews();
     const randomColor = AVATAR_BG_COLORS[Math.floor(Math.random() * AVATAR_BG_COLORS.length)];
 
     const newReview: Review = {
@@ -228,75 +298,104 @@ class ReviewService {
       title: formData.title.trim(),
       comment: formData.comment.trim(),
       createdAt: new Date().toISOString(),
-      status: 'pending', // Pending approval by admin!
+      status: 'pending',
       featured: false,
       verifiedClient: formData.verifiedClient ?? true,
     };
 
-    reviews.unshift(newReview);
-    this.saveStorage(reviews);
+    const updated = [newReview, ...reviews];
+    this.saveStorage(updated);
+
+    // Save to Firestore so it syncs across all devices & GitHub Pages
+    setDoc(doc(db, 'reviews', newReview.id), newReview).catch((err) => {
+      console.warn('Firestore setDoc notice for submitted review:', err);
+    });
+
     return newReview;
   }
 
   // Admin: Approve review (Accept)
   public approveReview(id: string): boolean {
-    const reviews = this.getStorage();
+    const reviews = this.getAllReviews();
     const idx = reviews.findIndex((r) => r.id === id);
     if (idx === -1) return false;
 
-    reviews[idx] = {
+    const updatedReview: Review = {
       ...reviews[idx],
       status: 'approved',
     };
-    this.saveStorage(reviews);
+    reviews[idx] = updatedReview;
+    this.saveStorage([...reviews]);
+
+    setDoc(doc(db, 'reviews', id), updatedReview, { merge: true }).catch((err) => {
+      console.warn('Firestore setDoc notice on approveReview:', err);
+    });
+
     return true;
   }
 
   // Admin: Reject review
   public rejectReview(id: string): boolean {
-    const reviews = this.getStorage();
+    const reviews = this.getAllReviews();
     const idx = reviews.findIndex((r) => r.id === id);
     if (idx === -1) return false;
 
-    reviews[idx] = {
+    const updatedReview: Review = {
       ...reviews[idx],
       status: 'rejected',
       featured: false,
     };
-    this.saveStorage(reviews);
+    reviews[idx] = updatedReview;
+    this.saveStorage([...reviews]);
+
+    setDoc(doc(db, 'reviews', id), updatedReview, { merge: true }).catch((err) => {
+      console.warn('Firestore setDoc notice on rejectReview:', err);
+    });
+
     return true;
   }
 
   // Admin: Toggle Featured status
   public toggleFeatured(id: string): boolean {
-    const reviews = this.getStorage();
+    const reviews = this.getAllReviews();
     const idx = reviews.findIndex((r) => r.id === id);
     if (idx === -1) return false;
 
-    reviews[idx] = {
+    const updatedReview: Review = {
       ...reviews[idx],
       featured: !reviews[idx].featured,
     };
-    this.saveStorage(reviews);
+    reviews[idx] = updatedReview;
+    this.saveStorage([...reviews]);
+
+    setDoc(doc(db, 'reviews', id), updatedReview, { merge: true }).catch((err) => {
+      console.warn('Firestore setDoc notice on toggleFeatured:', err);
+    });
+
     return true;
   }
 
   // Admin: Delete review permanently
   public deleteReview(id: string): boolean {
-    const reviews = this.getStorage();
+    const reviews = this.getAllReviews();
     const filtered = reviews.filter((r) => r.id !== id);
     if (filtered.length === reviews.length) return false;
     this.saveStorage(filtered);
+
+    deleteDoc(doc(db, 'reviews', id)).catch((err) => {
+      console.warn('Firestore deleteDoc notice on deleteReview:', err);
+    });
+
     return true;
   }
 
   // Admin: Reply to review
   public addAdminReply(id: string, message: string, author = 'Superb Apex Team'): boolean {
-    const reviews = this.getStorage();
+    const reviews = this.getAllReviews();
     const idx = reviews.findIndex((r) => r.id === id);
     if (idx === -1) return false;
 
-    reviews[idx] = {
+    const updatedReview: Review = {
       ...reviews[idx],
       adminReply: {
         message: message.trim(),
@@ -304,21 +403,26 @@ class ReviewService {
         author,
       },
     };
-    this.saveStorage(reviews);
+    reviews[idx] = updatedReview;
+    this.saveStorage([...reviews]);
+
+    setDoc(doc(db, 'reviews', id), updatedReview, { merge: true }).catch((err) => {
+      console.warn('Firestore setDoc notice on addAdminReply:', err);
+    });
+
     return true;
   }
 
   // Admin: Reset to default seeded reviews
   public resetToDefault(): void {
     if (typeof window === 'undefined') return;
-    localStorage.setItem(REVIEWS_STORAGE_KEY, JSON.stringify(INITIAL_SEEDED_REVIEWS));
-    window.dispatchEvent(new CustomEvent('sad_reviews_updated', { detail: { reviews: INITIAL_SEEDED_REVIEWS } }));
+    this.saveStorage(INITIAL_SEEDED_REVIEWS);
+    this.seedBaselineToFirestore().catch(() => {});
   }
 
   // Admin Password Security via Salted Cryptographic Hash
   public getStoredAdminHash(): string {
     if (typeof window === 'undefined') return DEFAULT_ADMIN_HASH;
-    // Clear legacy plaintext storage if any existed
     try {
       if (localStorage.getItem('sad_admin_password_v1')) {
         localStorage.removeItem('sad_admin_password_v1');

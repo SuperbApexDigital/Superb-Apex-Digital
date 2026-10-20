@@ -1,16 +1,38 @@
-import { initializeApp } from 'firebase/app';
+import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore, doc, getDocFromServer } from 'firebase/firestore';
 import firebaseConfig from '../../firebase-applet-config.json';
 
-const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
-export const auth = getAuth(app);
+let appInstance: any = null;
+try {
+  appInstance = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+} catch (e) {
+  console.warn('Firebase initializeApp notice:', e);
+}
 
-// Test connection on boot per Firebase guidelines
-async function testConnection() {
+let firestoreInstance: any = null;
+try {
+  if (appInstance) {
+    firestoreInstance = getFirestore(appInstance, firebaseConfig.firestoreDatabaseId);
+  }
+} catch (e) {
   try {
-    await getDocFromServer(doc(db, 'team_members', '__test_connection__'));
+    if (appInstance) {
+      firestoreInstance = getFirestore(appInstance);
+    }
+  } catch (err) {
+    console.warn('Firestore initialization notice:', err);
+  }
+}
+
+export const db = firestoreInstance;
+export const auth = appInstance ? getAuth(appInstance) : null;
+
+// Test connection on boot using valid non-reserved document ID
+async function testConnection() {
+  if (!db) return;
+  try {
+    await getDocFromServer(doc(db, 'team_members', 'test-connection'));
   } catch (error) {
     if (error instanceof Error) {
       console.warn('Firestore initial connection status:', error.message);
@@ -18,3 +40,4 @@ async function testConnection() {
   }
 }
 testConnection();
+

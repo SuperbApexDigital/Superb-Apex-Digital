@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Layers } from 'lucide-react';
+import { resolveAvatarUrl } from '../../utils/imageUrl';
 
 interface ImageWithFallbackProps {
   src: string;
@@ -59,7 +60,7 @@ export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
         </div>
       )}
       <img
-        src={src}
+        src={resolveAvatarUrl(src) || src}
         alt={alt}
         referrerPolicy="no-referrer"
         loading="lazy"

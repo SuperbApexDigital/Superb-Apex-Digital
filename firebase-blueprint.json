@@ -71,12 +71,73 @@
         }
       },
       "required": ["id", "name", "role", "department"]
+    },
+    "Review": {
+      "title": "Review",
+      "description": "Client review with rating, moderation status, and administrative response",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the review"
+        },
+        "clientName": {
+          "type": "string",
+          "description": "Name or handle of the client"
+        },
+        "clientRole": {
+          "type": "string",
+          "description": "Community, channel, or organizational role of client"
+        },
+        "serviceCategory": {
+          "type": "string",
+          "description": "Category of agency service received"
+        },
+        "rating": {
+          "type": "number",
+          "description": "Star rating from 1 to 5"
+        },
+        "title": {
+          "type": "string",
+          "description": "Headline of the review"
+        },
+        "comment": {
+          "type": "string",
+          "description": "Detailed text feedback"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "ISO timestamp of creation"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "approved", "rejected"],
+          "description": "Moderation status"
+        },
+        "featured": {
+          "type": "boolean",
+          "description": "Whether featured on homepage"
+        },
+        "verifiedClient": {
+          "type": "boolean",
+          "description": "Verified client badge"
+        },
+        "avatarBgColor": {
+          "type": "string",
+          "description": "Avatar badge color code"
+        }
+      },
+      "required": ["id", "clientName", "rating", "comment", "status"]
     }
   },
   "firestore": {
     "/team_members/{memberId}": {
       "schema": "#/entities/TeamMember",
       "description": "Public collection of agency team members synced across all visitor devices and admin"
+    },
+    "/reviews/{reviewId}": {
+      "schema": "#/entities/Review",
+      "description": "Client reviews with ratings and administrative replies synced across all devices"
     }
   }
 }

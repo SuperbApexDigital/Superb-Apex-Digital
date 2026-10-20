@@ -6,22 +6,24 @@
     <title>Redirecting – Superb Apex Digital</title>
     <script>
       // Single Page Application redirect script for GitHub Pages
-      // Converts direct path requests into hash routes so the SPA handles them without 404 errors.
       (function() {
         var path = window.location.pathname;
         var hostname = window.location.hostname;
         var isGitHubPages = hostname.endsWith('github.io');
         
-        // Extract repo name if on github.io (<username>.github.io/<repo>)
         var segments = path.split('/').filter(Boolean);
-        var repoName = 'superb-apex-digital';
+        var basePrefix = '';
+        var cleanPath = '';
+
         if (isGitHubPages && segments.length > 0) {
-          repoName = segments[0];
+          var repoName = segments[0];
+          basePrefix = '/' + repoName;
+          cleanPath = segments.slice(1).join('/');
+        } else {
+          cleanPath = segments.join('/');
         }
 
-        var basePrefix = isGitHubPages ? ('/' + repoName) : '';
-        var repoRegex = new RegExp('^' + (basePrefix ? (basePrefix + '/?') : '/?'));
-        var cleanPath = path.replace(repoRegex, '').replace(/^index\.html\/?/i, '');
+        cleanPath = cleanPath.replace(/^index\.html\/?/i, '');
         
         var query = window.location.search || '';
         var hash = window.location.hash || '';

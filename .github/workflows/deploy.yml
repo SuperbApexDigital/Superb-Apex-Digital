@@ -42,8 +42,8 @@ jobs:
       - name: Build production site
         run: npm run build
         env:
-          # Automatically uses GitHub Pages base path, falling back to '/superb-apex-digital/'
-          VITE_BASE_PATH: ${{ steps.pages.outputs.base_path || '/superb-apex-digital' }}/
+          # Uses configured GitHub Pages base path, or falls back to relative './'
+          VITE_BASE_PATH: ${{ steps.pages.outputs.base_path || './' }}
 
       - name: Upload GitHub Pages artifact
         uses: actions/upload-pages-artifact@v3

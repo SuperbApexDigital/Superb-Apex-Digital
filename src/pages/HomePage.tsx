@@ -3,8 +3,9 @@ import { useRouter } from '../context/RouterContext';
 import { ImageWithFallback } from '../components/common/ImageWithFallback';
 import { ServiceIconBadge, ServiceIconType } from '../components/common/ServiceIconBadge';
 import { ApexLogo } from '../components/common/ApexLogo';
+import { resolveAvatarUrl } from '../utils/imageUrl';
 
-const heroStudioImg = '/images/hero_apex_digital_studio_1791938469349.jpg';
+const heroStudioImg = resolveAvatarUrl('/images/hero_apex_digital_studio_1791938469349.jpg') || './images/hero_apex_digital_studio_1791938469349.jpg';
 import {
   ArrowRight,
   ShieldCheck,

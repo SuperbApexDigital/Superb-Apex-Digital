@@ -78,16 +78,16 @@ const teamSyncPlugin = () => ({
 });
 
 export default defineConfig(({ command }) => {
-  // During local development or preview server, use root '/' for immediate availability.
-  // For production build, default to the GitHub Pages repository path '/superb-apex-digital/'.
-  // Supports runtime override via VITE_BASE_PATH environment variable (e.g. for custom root domains).
+  // For production build, default to relative base './' so assets load seamlessly
+  // on any GitHub Pages repository name, custom root domains, or subdirectories without 404 white screens.
+  // Runtime override remains supported via VITE_BASE_PATH if a specific absolute base is desired.
   let rawBase = process.env.VITE_BASE_PATH?.trim();
   if (rawBase) {
     if (!rawBase.endsWith('/')) rawBase = `${rawBase}/`;
     if (!rawBase.startsWith('/') && !rawBase.startsWith('.')) rawBase = `/${rawBase}`;
     rawBase = rawBase.replace(/\/{2,}/g, '/');
   }
-  const basePath = rawBase || '/';
+  const basePath = rawBase || (command === 'build' ? './' : '/');
 
   return {
     base: basePath,

@@ -86,9 +86,15 @@ function parseCurrentLocation(): { route: RoutePath; params: QueryParams } {
   const pathname = window.location.pathname || '/';
   const segments = pathname.split('/').filter(Boolean);
 
-  // If first segment is repository name (GitHub Pages), remove it
-  if (segments.length > 0 && segments[0].toLowerCase() === 'superb-apex-digital') {
-    segments.shift();
+  // If first segment is repository name (GitHub Pages <user>.github.io/<repo>), remove it if not a route
+  if (segments.length > 0) {
+    const firstLower = segments[0].toLowerCase();
+    const isKnownRoute = VALID_ROUTES.some(
+      (r) => r.toLowerCase() === firstLower || r.toLowerCase().startsWith(`${firstLower}/`)
+    );
+    if (!isKnownRoute && firstLower !== 'index.html') {
+      segments.shift();
+    }
   }
 
   const remainingPath = segments.join('/').replace(/\/+$/, '').trim();

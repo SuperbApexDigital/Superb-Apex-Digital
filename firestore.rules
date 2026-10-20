@@ -40,12 +40,28 @@ service cloud.firestore {
         && (!('discordRoles' in data) || (data.discordRoles is list && data.discordRoles.size() <= 20));
     }
 
+    function isValidReview(data, reviewId) {
+      return data.id is string && data.id == reviewId && isValidId(data.id)
+        && data.clientName is string && data.clientName.size() > 0 && data.clientName.size() <= 100
+        && data.comment is string && data.comment.size() > 0 && data.comment.size() <= 3000
+        && data.rating is number && data.rating >= 1 && data.rating <= 5
+        && data.status is string && (data.status == 'pending' || data.status == 'approved' || data.status == 'rejected');
+    }
+
     // Agency Team Members collection: globally readable by all visitors & devices
     match /team_members/{memberId} {
       allow get, list: if true;
       allow create: if isValidId(memberId) && isValidTeamMember(incoming(), memberId);
       allow update: if isValidId(memberId) && isValidTeamMember(incoming(), memberId);
       allow delete: if isValidId(memberId);
+    }
+
+    // Client Reviews collection: globally readable and synchronized across all devices
+    match /reviews/{reviewId} {
+      allow get, list: if true;
+      allow create: if isValidId(reviewId) && isValidReview(incoming(), reviewId);
+      allow update: if isValidId(reviewId) && isValidReview(incoming(), reviewId);
+      allow delete: if isValidId(reviewId);
     }
   }
 }

@@ -1,6 +1,6 @@
 /**
- * Utility to resolve profile avatar URLs consistently across mobile devices,
- * local development, subpaths, and cloud storage data URLs.
+ * Utility to resolve profile avatar and static image URLs consistently across mobile devices,
+ * local development, GitHub Pages (including custom repository names), and cloud storage data URLs.
  */
 export function resolveAvatarUrl(url?: string): string | undefined {
   if (!url) return undefined;
@@ -13,17 +13,27 @@ export function resolveAvatarUrl(url?: string): string | undefined {
     return url;
   }
 
-  const base = import.meta.env.BASE_URL || '/';
-  const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
+  // Detect base URL from Vite or runtime environment
+  let base = import.meta.env.BASE_URL || './';
 
-  if (url.startsWith('/src/assets/images/')) {
-    const filename = url.split('/').pop();
-    return `${cleanBase}/images/${filename}`;
+  // If hosted on GitHub Pages (<user>.github.io/<repo>) and base is still default '/', infer repo subpath
+  if (typeof window !== 'undefined' && window.location.hostname.endsWith('github.io')) {
+    const segments = window.location.pathname.split('/').filter(Boolean);
+    if (segments.length > 0 && segments[0] !== 'index.html' && (!base || base === '/')) {
+      base = `/${segments[0]}/`;
+    }
   }
 
-  if (url.startsWith('/images/')) {
-    return `${cleanBase}${url}`;
+  const filename = url.split('/').pop();
+  if (!filename) return url;
+
+  // Format base to end with slash
+  const slashBase = base.endsWith('/') ? base : `${base}/`;
+
+  if (url.includes('/images/') || url.includes('/assets/images/')) {
+    return `${slashBase}images/${filename}`;
   }
 
-  return url;
+  const cleanUrl = url.startsWith('/') ? url.slice(1) : url;
+  return `${slashBase}${cleanUrl}`;
 }
